@@ -1,0 +1,65 @@
+{
+  "name": "jotai-jsx",
+  "description": "👻😎",
+  "version": "0.0.1",
+  "author": "Daishi Kato",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dai-shi/jotai-jsx.git"
+  },
+  "source": "./src/index.ts",
+  "main": "./dist/index.umd.js",
+  "module": "./dist/index.modern.js",
+  "types": "./dist/src/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "compile": "microbundle build -f modern,umd",
+    "test": "run-s eslint tsc-test jest",
+    "eslint": "eslint --ext .js,.ts,.tsx .",
+    "jest": "jest --preset ts-jest/presets/js-with-ts __tests__/*.tsx",
+    "tsc-test": "tsc --project . --noEmit",
+    "examples:01_minimal": "DIR=01_minimal EXT=js webpack-cli serve",
+    "examples:02_typescript": "DIR=02_typescript webpack-cli serve"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    }
+  },
+  "keywords": [
+    "jotai",
+    "jsx",
+    "react"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "react": "^17.0.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.23",
+    "@types/react": "^17.0.13",
+    "@typescript-eslint/eslint-plugin": "^4.28.1",
+    "@typescript-eslint/parser": "^4.28.1",
+    "babel-loader": "^8.2.2",
+    "eslint": "^7.29.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-react": "^7.24.0",
+    "html-webpack-plugin": "^5.3.2",
+    "jest": "^27.0.6",
+    "microbundle": "^0.13.3",
+    "npm-run-all": "^4.1.5",
+    "ts-jest": "^27.0.3",
+    "ts-loader": "^9.2.3",
+    "typescript": "^4.3.5",
+    "webpack": "^5.41.1",
+    "webpack-cli": "^4.7.2",
+    "webpack-dev-server": "^3.11.2"
+  }
+}
