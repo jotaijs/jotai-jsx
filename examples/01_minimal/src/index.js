@@ -35,15 +35,11 @@ const TextBox = () => {
 const App = () => (
   <>
     <h1>Counter</h1>
-    <div>
-      <Counter />
-      <Counter />
-    </div>
+    <Counter />
+    <Counter />
     <h1>TextBox</h1>
-    <div>
-      <TextBox />
-      <TextBox />
-    </div>
+    <TextBox />
+    <TextBox />
   </>
 );
 

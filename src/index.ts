@@ -9,68 +9,128 @@ import type { Atom, WritableAtom, SetAtom } from './vendor/atom';
 
 export { atom } from './vendor/atom';
 
+const isTextInput = (ele: any) => (
+  ele.type === 'input' && (
+    !ele.props.type
+    || ele.props.type === 'text'
+    || ele.props.type === 'textarea'
+  )
+);
+
+type RenderContext = {
+  ele?: any;
+  parent?: any;
+  node?: any;
+  children: Map<unknown, RenderContext>;
+  selectionStart?: number; // for text(area) input only
+};
+
+const childRenderContext = (ctx: RenderContext, key: unknown) => {
+  let childCtx = ctx.children.get(key);
+  if (!childCtx) {
+    childCtx = { children: new Map() };
+    ctx.children.set(key, childCtx);
+  }
+  return childCtx;
+};
+
 const renderStack: (() => void)[] = [];
 
-// FIXME bail out if ele isn't changed
-export function render(ele: any, parent: any, reference: any = null) {
-  let node: any;
+let inRender = 0;
+
+export function render(
+  ele: any,
+  parent: any,
+  ctx: RenderContext = { children: new Map() },
+) {
+  ++inRender;
   if (ele === null || ele === undefined) {
     // do nothing
-    node = null;
-  } else if (typeof ele === 'string') {
-    node = document.createTextNode(ele);
-    parent.insertBefore(node, reference);
-  } else if (typeof ele === 'number') {
-    node = document.createTextNode(String(ele));
-    parent.insertBefore(node, reference);
+  } else if (ctx.ele === ele && ctx.parent === parent) {
+    // TODO test stable element no re-rendering
+    // not changed
+  } else if (typeof ele === 'string' || typeof ele === 'number') {
+    const node = document.createTextNode(String(ele));
+    if (ctx.node && ctx.parent === parent) {
+      parent.replaceChild(node, ctx.node);
+    } else {
+      parent.appendChild(node);
+    }
+    ctx.ele = ele;
+    ctx.parent = parent;
+    ctx.node = node;
   } else if (Array.isArray(ele)) {
-    node = ele.map((item) => render(item, parent));
+    ele.forEach((item, index) => {
+      // TODO test array item key works as expected?
+      render(item, parent, childRenderContext(ctx, item.key ?? index));
+    });
+    ctx.ele = ele;
+    ctx.parent = parent;
   } else if (ele.type === Symbol.for('react.fragment')) {
-    node = render(ele.props.children, parent);
+    render(ele.props.children, parent, childRenderContext(ctx, ele.key));
+    ctx.ele = ele;
+    ctx.parent = parent;
   } else if (typeof ele.type === 'string') {
-    node = document.createElement(ele.type);
+    const node = document.createElement(ele.type);
     Object.keys(ele.props).forEach((key) => {
       if (key === 'children') {
         // do nothing
+      } else if (key === 'onChange' && isTextInput(ele) && 'value' in ele.props) {
+        node.addEventListener('input', (event: any) => {
+          if (event.target === ctx.node) {
+            ctx.selectionStart = event.target.selectionStart;
+            ele.props[key](event);
+          }
+        });
+        node.addEventListener('blur', (event: any) => {
+          if (event.target === ctx.node && !inRender) {
+            delete ctx.selectionStart;
+          }
+        });
       } else if (key.startsWith('on')) {
-        // FIXME removeEventListener
-        // TODO onChange is not onchange
-        node.addEventListener(key.slice(2).toLowerCase(), ele.props[key]);
+        node.addEventListener(key.slice(2).toLowerCase(), (event: any) => {
+          if (event.target === ctx.node) {
+            ele.props[key](event);
+          }
+        });
       } else {
-        // TODO handle other special props
+        // TODO handle other special props (defaultValue)
         node.setAttribute(key, ele.props[key]);
       }
     });
-    parent.insertBefore(node, reference);
-    render(ele.props.children, node);
+    if (ctx.node && ctx.parent === parent) {
+      parent.replaceChild(node, ctx.node);
+    } else {
+      parent.appendChild(node);
+    }
+    if (typeof ctx.selectionStart === 'number' && isTextInput(ele)) {
+      node.focus();
+      node.setSelectionRange(ctx.selectionStart, ctx.selectionStart);
+    }
+    render(ele.props.children, node, childRenderContext(ctx, ele.key));
+    ctx.ele = ele;
+    ctx.parent = parent;
+    ctx.node = node;
   } else if (typeof ele.type === 'function') {
-    let prevNode: any;
-    let wip = false; // NOTE is this good?
+    let wip = false; // NOTE is this good? (why we need this?)
     const rerender = () => {
       if (wip) {
         return;
       }
       wip = true;
       renderStack.unshift(rerender);
-      if (Array.isArray(prevNode)) {
-        prevNode.forEach((item) => {
-          item.remove();
-        });
-      } else if (prevNode) {
-        prevNode.remove();
-      }
-      // FIXME preserve order with `reference`
-      prevNode = render(ele.type(ele.props), parent);
+      render(ele.type(ele.props), parent, childRenderContext(ctx, ele.key));
       renderStack.shift();
       wip = false;
     };
     rerender();
-    return prevNode;
+    ctx.ele = ele;
+    ctx.parent = parent;
   } else {
     // console.log('unhandled ele', ele);
     throw new Error(`unhandled ele: ${typeof ele} ${ele?.type}`);
   }
-  return node;
+  --inRender;
 }
 
 // TODO context
