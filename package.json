@@ -23,7 +23,7 @@
     "jest": "jest --preset ts-jest/presets/js-with-ts __tests__/*.tsx",
     "tsc-test": "tsc --project . --noEmit",
     "examples:01_minimal": "DIR=01_minimal EXT=js webpack-cli serve",
-    "examples:02_typescript": "DIR=02_typescript webpack-cli serve"
+    "examples:02_typescript": "DIR=02_typescript EXT=tsx webpack-cli serve"
   },
   "jest": {
     "testEnvironment": "jsdom",

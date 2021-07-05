@@ -79,8 +79,10 @@ export function render(
   }
   ++inRender;
   if (ele === null || ele === undefined || ele === false) {
-    ctx.parent?.removeChild(ctx.node);
     cleanupHooks(ctx);
+    if (ctx.parent && ctx.node) {
+      ctx.parent.removeChild(ctx.node);
+    }
     ctx.ele = ele;
     ctx.parent = parent;
     delete ctx.node;
@@ -90,7 +92,9 @@ export function render(
     if (ctx.node && ctx.parent === parent) {
       parent.replaceChild(node, ctx.node);
     } else {
-      ctx.parent?.removeChild(ctx.node);
+      if (ctx.parent && ctx.node) {
+        ctx.parent.removeChild(ctx.node);
+      }
       parent.appendChild(node);
     }
     ctx.ele = ele;
@@ -109,8 +113,10 @@ export function render(
       // TODO test array removal works as expected
       const childCtx = ctx.children.get(key) as RenderContext;
       ctx.children.delete(key);
-      childCtx.parent?.removeChild(childCtx.node);
       cleanupHooks(childCtx);
+      if (childCtx.parent && childCtx.node) {
+        childCtx.parent.removeChild(childCtx.node);
+      }
     });
     ctx.ele = ele;
     ctx.parent = parent;
@@ -238,12 +244,13 @@ export function useAtom<Value, Update>(
   Promise.resolve().then(() => {
     if (!hookCtx || hookCtx.atom !== atom) {
       hookCtx?.cleanup?.();
-      let prevAtomState = atomState;
+      let prevValue = value;
       ctx.hooks[hookIndex] = {
         cleanup: subscribeAtom(globalState, atom, () => {
           const nextAtomState = readAtom(globalState, atom);
-          if (nextAtomState !== prevAtomState) {
-            prevAtomState = nextAtomState;
+          // TODO error, promise
+          if (!Object.is(nextAtomState.v, prevValue)) {
+            prevValue = nextAtomState.v;
             ctx.rerender?.();
           }
         }),

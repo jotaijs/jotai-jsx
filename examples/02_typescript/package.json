@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@types/react": "latest",
     "jotai-jsx": "latest",
     "react": "latest",
-    "react-scripts": "latest"
+    "react-scripts": "latest",
+    "typescript": "latest"
   },
   "scripts": {
     "start": "react-scripts start",
