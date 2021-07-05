@@ -1,23 +1,31 @@
 /* eslint quotes: off */
 
-import { render, atom, useAtom } from '../src/index';
+import { render, atom, useAtom } from "../src/index";
 
-describe('useAtom spec', () => {
+describe("useAtom spec", () => {
   beforeEach(() => {
-    document.body.innerHTML = '';
+    document.body.innerHTML = "";
   });
 
-  it('default value', () => {
+  it("default value", () => {
     const countAtom = atom(1);
     const Counter = () => {
       const [count] = useAtom(countAtom);
       return <p>{count}</p>;
     };
-    render(<div>body<Counter /></div>, document.body);
-    expect(document.body.innerHTML).toMatchInlineSnapshot(`"<div>body<p>1</p></div>"`);
+    render(
+      <div>
+        body
+        <Counter />
+      </div>,
+      document.body,
+    );
+    expect(document.body.innerHTML).toMatchInlineSnapshot(
+      `"<div>body<p>1</p></div>"`,
+    );
   });
 
-  it('increment value', () => {
+  it("increment value", () => {
     const countAtom = atom(1);
     const Counter = () => {
       const [count, setCount] = useAtom(countAtom);
@@ -34,32 +42,79 @@ describe('useAtom spec', () => {
         </>
       );
     };
-    render(<div>body<Counter /></div>, document.body);
-    expect(document.body.innerHTML).toMatchInlineSnapshot(`"<div>body<p>1</p><button type=\\"button\\" id=\\"btn01\\">button</button></div>"`);
-    document.getElementById('btn01')?.click();
-    expect(document.body.innerHTML).toMatchInlineSnapshot(`"<div>body<p>2</p><button type=\\"button\\" id=\\"btn01\\">button</button></div>"`);
+    render(
+      <div>
+        body
+        <Counter />
+      </div>,
+      document.body,
+    );
+    expect(document.body.innerHTML).toMatchInlineSnapshot(
+      `"<div>body<p>1</p><button type=\\"button\\" id=\\"btn01\\">button</button></div>"`,
+    );
+    document.getElementById("btn01")?.click();
+    expect(document.body.innerHTML).toMatchInlineSnapshot(
+      `"<div>body<p>2</p><button type=\\"button\\" id=\\"btn01\\">button</button></div>"`,
+    );
   });
 
-  it('flat two counters', () => {
+  it("flat two counters", () => {
     const countAtom = atom(1);
     const Counter = ({ id }: { id: string }) => {
       const [count, setCount] = useAtom(countAtom);
       return (
         <>
           <p>{count}</p>
-          <button
-            type="button"
-            id={id}
-            onClick={() => setCount((c) => c + 1)}
-          >
+          <button type="button" id={id} onClick={() => setCount((c) => c + 1)}>
             button
           </button>
         </>
       );
     };
-    render(<div>body<Counter id="btn01" />another<Counter id="btn02" /></div>, document.body);
-    expect(document.body.innerHTML).toMatchInlineSnapshot(`"<div>body<p>1</p><button type=\\"button\\" id=\\"btn01\\">button</button>another<p>1</p><button type=\\"button\\" id=\\"btn02\\">button</button></div>"`);
-    document.getElementById('btn01')?.click();
-    expect(document.body.innerHTML).toMatchInlineSnapshot(`"<div>body<p>2</p><button type=\\"button\\" id=\\"btn01\\">button</button>another<p>2</p><button type=\\"button\\" id=\\"btn02\\">button</button></div>"`);
+    render(
+      <div>
+        body
+        <Counter id="btn01" />
+        another
+        <Counter id="btn02" />
+      </div>,
+      document.body,
+    );
+    expect(document.body.innerHTML).toMatchInlineSnapshot(
+      `"<div>body<p>1</p><button type=\\"button\\" id=\\"btn01\\">button</button>another<p>1</p><button type=\\"button\\" id=\\"btn02\\">button</button></div>"`,
+    );
+    document.getElementById("btn01")?.click();
+    expect(document.body.innerHTML).toMatchInlineSnapshot(
+      `"<div>body<p>2</p><button type=\\"button\\" id=\\"btn01\\">button</button>another<p>2</p><button type=\\"button\\" id=\\"btn02\\">button</button></div>"`,
+    );
+  });
+
+  it("mount/unmount component", () => {
+    const visibleAtom = atom(true);
+    const Component = () => {
+      const [visible, setVisible] = useAtom(visibleAtom);
+      return (
+        <>
+          {visible ? "visible" : null}
+          <button
+            type="button"
+            id="btn01"
+            onClick={() => {
+              setVisible((prevVisible) => !prevVisible);
+            }}
+          >
+            toggle
+          </button>
+        </>
+      );
+    };
+    render(<><Component /></>, document.body);
+    expect(document.body.innerHTML).toMatchInlineSnapshot(
+      `"visible<button type=\\"button\\" id=\\"btn01\\">toggle</button>"`,
+    );
+    document.getElementById("btn01")?.click();
+    expect(document.body.innerHTML).toMatchInlineSnapshot(
+      `"<button type=\\"button\\" id=\\"btn01\\">toggle</button>"`,
+    );
   });
 });
