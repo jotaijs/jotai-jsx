@@ -62,7 +62,7 @@ export function render(
   } else if (Array.isArray(ele)) {
     ele.forEach((item, index) => {
       // TODO test array item key works as expected?
-      render(item, parent, childRenderContext(ctx, item.key ?? index));
+      render(item, parent, childRenderContext(ctx, item?.key ?? index));
     });
     ctx.ele = ele;
     ctx.parent = parent;
