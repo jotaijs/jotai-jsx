@@ -15,60 +15,112 @@ const isTextInput = (ele: any) =>
     ele.props.type === 'text' ||
     ele.props.type === 'textarea');
 
+type HookContext = {
+  cleanup?: () => void;
+  atom?: Atom<any>;
+  setAtom?: SetAtom<any>;
+};
+
 type RenderContext = {
   ele?: any;
   parent?: any;
   node?: any;
   children: Map<unknown, RenderContext>;
+  rerender?: () => void;
   selectionStart?: number; // for text(area) input only
+  hooks: HookContext[];
+  hookIndex: number;
+};
+
+const createRenderContext = () => {
+  const ctx: RenderContext = {
+    children: new Map(),
+    hooks: [],
+    hookIndex: 0,
+  };
+  return ctx;
 };
 
 const childRenderContext = (ctx: RenderContext, key: unknown) => {
   let childCtx = ctx.children.get(key);
   if (!childCtx) {
-    childCtx = { children: new Map() };
+    childCtx = createRenderContext();
     ctx.children.set(key, childCtx);
   }
   return childCtx;
 };
 
-const renderStack: (() => void)[] = [];
+const cleanupHooks = (ctx: RenderContext) => {
+  if (ctx.hooks.length) {
+    const prevHooks = ctx.hooks;
+    ctx.hooks = [];
+    ctx.hookIndex = 0;
+    Promise.resolve(() => {
+      prevHooks.reverse().forEach((hookCtx) => {
+        hookCtx.cleanup?.();
+      });
+    });
+  }
+};
+
+const renderStack: RenderContext[] = [];
 
 let inRender = 0;
 
 export function render(
   ele: any,
   parent: any,
-  ctx: RenderContext = { children: new Map() },
+  ctx: RenderContext = createRenderContext(),
 ) {
-  ++inRender;
-  if (ele === null || ele === undefined) {
-    // do nothing
-  } else if (ctx.ele === ele && ctx.parent === parent) {
+  if (ctx.ele === ele && ctx.parent === parent) {
     // TODO test stable element no re-rendering
-    // not changed
+    // not changed, do nothing
+    return;
+  }
+  ++inRender;
+  if (ele === null || ele === undefined || ele === false) {
+    ctx.parent?.removeChild(ctx.node);
+    cleanupHooks(ctx);
+    ctx.ele = ele;
+    ctx.parent = parent;
+    delete ctx.node;
   } else if (typeof ele === 'string' || typeof ele === 'number') {
+    cleanupHooks(ctx);
     const node = document.createTextNode(String(ele));
     if (ctx.node && ctx.parent === parent) {
       parent.replaceChild(node, ctx.node);
     } else {
+      ctx.parent?.removeChild(ctx.node);
       parent.appendChild(node);
     }
     ctx.ele = ele;
     ctx.parent = parent;
     ctx.node = node;
   } else if (Array.isArray(ele)) {
+    cleanupHooks(ctx);
+    const prevKeys = new Set(ctx.children.keys());
     ele.forEach((item, index) => {
       // TODO test array item key works as expected?
-      render(item, parent, childRenderContext(ctx, item?.key ?? index));
+      const key = item?.key ?? index;
+      prevKeys.delete(key);
+      render(item, parent, childRenderContext(ctx, key));
+    });
+    prevKeys.forEach((key) => {
+      // TODO test array removal works as expected
+      const childCtx = ctx.children.get(key) as RenderContext;
+      ctx.children.delete(key);
+      childCtx.parent?.removeChild(childCtx.node);
+      cleanupHooks(childCtx);
     });
     ctx.ele = ele;
     ctx.parent = parent;
   } else if (ele.type === Symbol.for('react.fragment')) {
+    cleanupHooks(ctx);
     render(ele.props.children, parent, childRenderContext(ctx, ele.key));
     ctx.ele = ele;
     ctx.parent = parent;
   } else if (typeof ele.type === 'string') {
+    cleanupHooks(ctx);
     const node = document.createElement(ele.type);
     Object.keys(ele.props).forEach((key) => {
       if (key === 'children') {
@@ -103,6 +155,7 @@ export function render(
     if (ctx.node && ctx.parent === parent) {
       parent.replaceChild(node, ctx.node);
     } else {
+      ctx.parent?.removeChild(ctx.node);
       parent.appendChild(node);
     }
     if (typeof ctx.selectionStart === 'number' && isTextInput(ele)) {
@@ -114,18 +167,13 @@ export function render(
     ctx.parent = parent;
     ctx.node = node;
   } else if (typeof ele.type === 'function') {
-    let wip = false; // NOTE is this good? (why we need this?)
-    const rerender = () => {
-      if (wip) {
-        return;
-      }
-      wip = true;
-      renderStack.unshift(rerender);
+    ctx.rerender = () => {
+      ctx.hookIndex = 0;
+      renderStack.unshift(ctx);
       render(ele.type(ele.props), parent, childRenderContext(ctx, ele.key));
       renderStack.shift();
-      wip = false;
     };
-    rerender();
+    ctx.rerender();
     ctx.ele = ele;
     ctx.parent = parent;
   } else {
@@ -170,23 +218,41 @@ export function useAtom<Value, Update>(
   // TODO error, promise
   const value = atomState.v;
 
-  const rerender = renderStack[0];
-  // FIXME unsubscribe
-  // FIXME bail out with same value
-  subscribeAtom(globalState, atom, rerender);
+  const ctx = renderStack[0];
+  const { hookIndex } = ctx;
+  const hookCtx: HookContext | undefined = ctx.hooks[hookIndex];
 
-  // NOTE is this good?
+  type SetAtomType = (update: Update) => void;
+  const setAtom: SetAtomType =
+    hookCtx?.atom === atom
+      ? (hookCtx?.setAtom as SetAtomType)
+      : (update) => {
+          if (isWritable(atom)) {
+            writeAtom(globalState, atom, update);
+          } else {
+            throw new Error('not writable atom');
+          }
+        };
+
+  // NOTE is promise microtask good?
   Promise.resolve().then(() => {
+    if (!hookCtx || hookCtx.atom !== atom) {
+      hookCtx?.cleanup?.();
+      let prevAtomState = atomState;
+      ctx.hooks[hookIndex] = {
+        cleanup: subscribeAtom(globalState, atom, () => {
+          const nextAtomState = readAtom(globalState, atom);
+          if (nextAtomState !== prevAtomState) {
+            prevAtomState = nextAtomState;
+            ctx.rerender?.();
+          }
+        }),
+        atom,
+        setAtom,
+      };
+    }
     flushPending(globalState);
   });
-
-  const setAtom = (update: Update) => {
-    if (isWritable(atom)) {
-      writeAtom(globalState, atom, update);
-    } else {
-      throw new Error('not writable atom');
-    }
-  };
 
   return [value, setAtom];
 }

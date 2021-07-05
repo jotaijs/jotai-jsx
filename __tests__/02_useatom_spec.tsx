@@ -25,7 +25,7 @@ describe('useAtom spec', () => {
     );
   });
 
-  it('increment value', () => {
+  it('increment value', async () => {
     const countAtom = atom(1);
     const Counter = () => {
       const [count, setCount] = useAtom(countAtom);
@@ -52,13 +52,14 @@ describe('useAtom spec', () => {
     expect(document.body.innerHTML).toMatchInlineSnapshot(
       `"<div>body<p>1</p><button type=\\"button\\" id=\\"btn01\\">button</button></div>"`,
     );
+    await Promise.resolve(); // wait for subscription
     document.getElementById('btn01')?.click();
     expect(document.body.innerHTML).toMatchInlineSnapshot(
       `"<div>body<p>2</p><button type=\\"button\\" id=\\"btn01\\">button</button></div>"`,
     );
   });
 
-  it('flat two counters', () => {
+  it('flat two counters', async () => {
     const countAtom = atom(1);
     const Counter = ({ id }: { id: string }) => {
       const [count, setCount] = useAtom(countAtom);
@@ -83,13 +84,14 @@ describe('useAtom spec', () => {
     expect(document.body.innerHTML).toMatchInlineSnapshot(
       `"<div>body<p>1</p><button type=\\"button\\" id=\\"btn01\\">button</button>another<p>1</p><button type=\\"button\\" id=\\"btn02\\">button</button></div>"`,
     );
+    await Promise.resolve(); // wait for subscription
     document.getElementById('btn01')?.click();
     expect(document.body.innerHTML).toMatchInlineSnapshot(
       `"<div>body<p>2</p><button type=\\"button\\" id=\\"btn01\\">button</button>another<p>2</p><button type=\\"button\\" id=\\"btn02\\">button</button></div>"`,
     );
   });
 
-  it('mount/unmount component', () => {
+  it('mount/unmount component', async () => {
     const visibleAtom = atom(true);
     const Component = () => {
       const [visible, setVisible] = useAtom(visibleAtom);
@@ -117,6 +119,7 @@ describe('useAtom spec', () => {
     expect(document.body.innerHTML).toMatchInlineSnapshot(
       `"visible<button type=\\"button\\" id=\\"btn01\\">toggle</button>"`,
     );
+    await Promise.resolve(); // wait for subscription
     document.getElementById('btn01')?.click();
     expect(document.body.innerHTML).toMatchInlineSnapshot(
       `"<button type=\\"button\\" id=\\"btn01\\">toggle</button>"`,
