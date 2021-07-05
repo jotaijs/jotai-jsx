@@ -9,13 +9,11 @@ import type { Atom, WritableAtom, SetAtom } from './vendor/atom';
 
 export { atom } from './vendor/atom';
 
-const isTextInput = (ele: any) => (
-  ele.type === 'input' && (
-    !ele.props.type
-    || ele.props.type === 'text'
-    || ele.props.type === 'textarea'
-  )
-);
+const isTextInput = (ele: any) =>
+  ele.type === 'input' &&
+  (!ele.props.type ||
+    ele.props.type === 'text' ||
+    ele.props.type === 'textarea');
 
 type RenderContext = {
   ele?: any;
@@ -75,7 +73,11 @@ export function render(
     Object.keys(ele.props).forEach((key) => {
       if (key === 'children') {
         // do nothing
-      } else if (key === 'onChange' && isTextInput(ele) && 'value' in ele.props) {
+      } else if (
+        key === 'onChange' &&
+        isTextInput(ele) &&
+        'value' in ele.props
+      ) {
         node.addEventListener('input', (event: any) => {
           if (event.target === ctx.node) {
             ctx.selectionStart = event.target.selectionStart;
@@ -138,29 +140,28 @@ const globalState = createState();
 
 const isWritable = <Value, Update>(
   atom: Atom<Value> | WritableAtom<Value, Update>,
-): atom is WritableAtom<Value, Update> => (
-    !!(atom as WritableAtom<Value, Update>).write
-  );
+): atom is WritableAtom<Value, Update> =>
+  !!(atom as WritableAtom<Value, Update>).write;
 
 export function useAtom<Value, Update>(
-  atom: WritableAtom<Value | Promise<Value>, Update>
-): [Value, SetAtom<Update>]
+  atom: WritableAtom<Value | Promise<Value>, Update>,
+): [Value, SetAtom<Update>];
 
 export function useAtom<Value, Update>(
-  atom: WritableAtom<Promise<Value>, Update>
-): [Value, SetAtom<Update>]
+  atom: WritableAtom<Promise<Value>, Update>,
+): [Value, SetAtom<Update>];
 
 export function useAtom<Value, Update>(
-  atom: WritableAtom<Value, Update>
-): [Value, SetAtom<Update>]
+  atom: WritableAtom<Value, Update>,
+): [Value, SetAtom<Update>];
 
 export function useAtom<Value>(
-  atom: Atom<Value | Promise<Value>>
-): [Value, never]
+  atom: Atom<Value | Promise<Value>>,
+): [Value, never];
 
-export function useAtom<Value>(atom: Atom<Promise<Value>>): [Value, never]
+export function useAtom<Value>(atom: Atom<Promise<Value>>): [Value, never];
 
-export function useAtom<Value>(atom: Atom<Value>): [Value, never]
+export function useAtom<Value>(atom: Atom<Value>): [Value, never];
 
 export function useAtom<Value, Update>(
   atom: Atom<Value> | WritableAtom<Value, Update>,

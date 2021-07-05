@@ -16,14 +16,16 @@ module.exports = {
     }),
   ],
   module: {
-    rules: [{
-      test: /\.[jt]sx?$/,
-      exclude: /node_modules/,
-      loader: 'ts-loader',
-      options: {
-        transpileOnly: true,
+    rules: [
+      {
+        test: /\.[jt]sx?$/,
+        exclude: /node_modules/,
+        loader: 'ts-loader',
+        options: {
+          transpileOnly: true,
+        },
       },
-    }],
+    ],
   },
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx'],

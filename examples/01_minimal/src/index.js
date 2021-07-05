@@ -12,8 +12,12 @@ const Counter = () => {
       numRendered: {++numRendered}
       <div>
         <span>Count: {count}</span>
-        <button type="button" onClick={() => setCount((c) => c + 1)}>+1</button>
-        <button type="button" onClick={() => setCount((c) => c - 1)}>-1</button>
+        <button type="button" onClick={() => setCount((c) => c + 1)}>
+          +1
+        </button>
+        <button type="button" onClick={() => setCount((c) => c - 1)}>
+          -1
+        </button>
       </div>
     </div>
   );
