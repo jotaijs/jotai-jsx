@@ -108,7 +108,12 @@ describe("useAtom spec", () => {
         </>
       );
     };
-    render(<><Component /></>, document.body);
+    render(
+      <>
+        <Component />
+      </>,
+      document.body,
+    );
     expect(document.body.innerHTML).toMatchInlineSnapshot(
       `"visible<button type=\\"button\\" id=\\"btn01\\">toggle</button>"`,
     );
