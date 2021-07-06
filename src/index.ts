@@ -50,7 +50,19 @@ const childRenderContext = (ctx: RenderContext, key: unknown) => {
   return childCtx;
 };
 
-const cleanupHooks = (ctx: RenderContext) => {
+const unmount = (
+  ctx: RenderContext,
+  noRecursive = false,
+  willReplaceChild = false,
+) => {
+  if (!noRecursive) {
+    new Set(ctx.children.keys()).forEach((childKey) => {
+      const childCtx = ctx.children.get(childKey) as RenderContext;
+      ctx.children.delete(childKey);
+      unmount(childCtx);
+    });
+  }
+
   if (ctx.hooks.length) {
     const prevHooks = ctx.hooks;
     ctx.hooks = [];
@@ -61,117 +73,113 @@ const cleanupHooks = (ctx: RenderContext) => {
       });
     });
   }
+
+  if (!willReplaceChild && ctx.parent && ctx.node) {
+    ctx.parent.removeChild(ctx.node);
+  }
 };
 
 const renderStack: RenderContext[] = [];
 
 let inRender = 0;
 
+const attachProps = (ele: any, node: any, ctx: RenderContext) => {
+  Object.keys(ele.props).forEach((key) => {
+    if (key === 'children') {
+      // do nothing
+    } else if (key === 'onChange' && isTextInput(ele) && 'value' in ele.props) {
+      node.addEventListener('input', (event: any) => {
+        if (event.target === ctx.node) {
+          ctx.selectionStart = event.target.selectionStart;
+          ele.props[key](event);
+        }
+      });
+      node.addEventListener('blur', (event: any) => {
+        if (event.target === ctx.node && !inRender) {
+          delete ctx.selectionStart;
+        }
+      });
+    } else if (key.startsWith('on')) {
+      node.addEventListener(key.slice(2).toLowerCase(), (event: any) => {
+        if (event.target === ctx.node) {
+          ele.props[key](event);
+        }
+      });
+    } else {
+      // TODO handle other special props (defaultValue)
+      node.setAttribute(key, ele.props[key]);
+    }
+  });
+};
+
 export function render(
   ele: any,
   parent: any,
   ctx: RenderContext = createRenderContext(),
 ) {
-  if (ctx.ele === ele && ctx.parent === parent) {
+  if (ele === ctx.ele) {
     // TODO test stable element no re-rendering
-    // not changed, do nothing
+    if (ctx.node && parent !== ctx.parent) {
+      parent.appendChild(ctx.node);
+      ctx.parent = parent;
+    }
     return;
   }
+
   ++inRender;
+  let node: any = null;
+
+  const willReplaceChild =
+    (typeof ele === 'string' ||
+      typeof ele === 'number' ||
+      typeof ele?.type === 'string') &&
+    ctx.parent === parent;
+  const prevChildKeys = new Set(ctx.children.keys());
+  if (Array.isArray(ele)) {
+    ele.forEach((item, index) => {
+      const childKey = item?.key ?? index;
+      prevChildKeys.delete(childKey);
+    });
+  } else if (ele?.type) {
+    const childKey = ele.key;
+    prevChildKeys.delete(childKey);
+  }
+  prevChildKeys.forEach((childKey) => {
+    const childCtx = ctx.children.get(childKey) as RenderContext;
+    ctx.children.delete(childKey);
+    unmount(childCtx);
+  });
+  unmount(ctx, true, willReplaceChild);
+
   if (ele === null || ele === undefined || ele === false) {
-    cleanupHooks(ctx);
-    if (ctx.parent && ctx.node) {
-      ctx.parent.removeChild(ctx.node);
-    }
-    ctx.ele = ele;
-    ctx.parent = parent;
-    delete ctx.node;
+    // do nothing
   } else if (typeof ele === 'string' || typeof ele === 'number') {
-    cleanupHooks(ctx);
-    const node = document.createTextNode(String(ele));
-    if (ctx.node && ctx.parent === parent) {
+    node = document.createTextNode(String(ele));
+    if (ctx.parent === parent && ctx.node) {
       parent.replaceChild(node, ctx.node);
     } else {
-      if (ctx.parent && ctx.node) {
-        ctx.parent.removeChild(ctx.node);
-      }
       parent.appendChild(node);
     }
-    ctx.ele = ele;
-    ctx.parent = parent;
-    ctx.node = node;
   } else if (Array.isArray(ele)) {
-    cleanupHooks(ctx);
-    const prevKeys = new Set(ctx.children.keys());
     ele.forEach((item, index) => {
       // TODO test array item key works as expected?
-      const key = item?.key ?? index;
-      prevKeys.delete(key);
-      render(item, parent, childRenderContext(ctx, key));
+      render(item, parent, childRenderContext(ctx, item?.key ?? index));
     });
-    prevKeys.forEach((key) => {
-      // TODO test array removal works as expected
-      const childCtx = ctx.children.get(key) as RenderContext;
-      ctx.children.delete(key);
-      cleanupHooks(childCtx);
-      if (childCtx.parent && childCtx.node) {
-        childCtx.parent.removeChild(childCtx.node);
-      }
-    });
-    ctx.ele = ele;
-    ctx.parent = parent;
   } else if (ele.type === Symbol.for('react.fragment')) {
-    cleanupHooks(ctx);
     render(ele.props.children, parent, childRenderContext(ctx, ele.key));
-    ctx.ele = ele;
-    ctx.parent = parent;
   } else if (typeof ele.type === 'string') {
-    cleanupHooks(ctx);
-    const node = document.createElement(ele.type);
-    Object.keys(ele.props).forEach((key) => {
-      if (key === 'children') {
-        // do nothing
-      } else if (
-        key === 'onChange' &&
-        isTextInput(ele) &&
-        'value' in ele.props
-      ) {
-        node.addEventListener('input', (event: any) => {
-          if (event.target === ctx.node) {
-            ctx.selectionStart = event.target.selectionStart;
-            ele.props[key](event);
-          }
-        });
-        node.addEventListener('blur', (event: any) => {
-          if (event.target === ctx.node && !inRender) {
-            delete ctx.selectionStart;
-          }
-        });
-      } else if (key.startsWith('on')) {
-        node.addEventListener(key.slice(2).toLowerCase(), (event: any) => {
-          if (event.target === ctx.node) {
-            ele.props[key](event);
-          }
-        });
-      } else {
-        // TODO handle other special props (defaultValue)
-        node.setAttribute(key, ele.props[key]);
-      }
-    });
-    if (ctx.node && ctx.parent === parent) {
+    node = document.createElement(ele.type);
+    attachProps(ele, node, ctx);
+    if (ctx.parent === parent && ctx.node) {
       parent.replaceChild(node, ctx.node);
     } else {
-      ctx.parent?.removeChild(ctx.node);
       parent.appendChild(node);
     }
-    if (typeof ctx.selectionStart === 'number' && isTextInput(ele)) {
+    if (Number.isFinite(ctx.selectionStart) && isTextInput(ele)) {
       node.focus();
       node.setSelectionRange(ctx.selectionStart, ctx.selectionStart);
     }
     render(ele.props.children, node, childRenderContext(ctx, ele.key));
-    ctx.ele = ele;
-    ctx.parent = parent;
-    ctx.node = node;
   } else if (typeof ele.type === 'function') {
     ctx.rerender = () => {
       ctx.hookIndex = 0;
@@ -180,12 +188,14 @@ export function render(
       renderStack.shift();
     };
     ctx.rerender();
-    ctx.ele = ele;
-    ctx.parent = parent;
   } else {
     // console.log('unhandled ele', ele);
     throw new Error(`unhandled ele: ${typeof ele} ${ele?.type}`);
   }
+
+  ctx.ele = ele;
+  ctx.parent = parent;
+  ctx.node = node;
   --inRender;
 }
 
