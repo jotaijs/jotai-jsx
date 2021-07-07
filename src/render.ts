@@ -103,19 +103,19 @@ const attachProps = (ele: any, node: HTMLElement, ctx: RenderContext) => {
       (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement)
     ) {
       node.addEventListener('input', (event: any) => {
-        if (event.target === ctx.node) {
+        if (node === ctx.node) {
           ctx.selectionStart = event.target.selectionStart;
           ele.props[key](event);
         }
       });
-      node.addEventListener('blur', (event: any) => {
-        if (event.target === ctx.node && !inRender) {
+      node.addEventListener('blur', () => {
+        if (node === ctx.node && !inRender) {
           delete ctx.selectionStart;
         }
       });
     } else if (key.startsWith('on')) {
       node.addEventListener(key.slice(2).toLowerCase(), (event: any) => {
-        if (event.target === ctx.node) {
+        if (node === ctx.node) {
           ele.props[key](event);
         }
       });
