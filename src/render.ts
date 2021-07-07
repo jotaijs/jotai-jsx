@@ -127,7 +127,6 @@ const attachProps = (ele: any, node: HTMLElement, ctx: RenderContext) => {
     } else if (key === 'className') {
       node.setAttribute('class', ele.props[key]);
     } else {
-      // TODO handle other special props (defaultValue)
       const propValue = ele.props[key];
       if (
         propValue === null ||
