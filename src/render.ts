@@ -11,10 +11,11 @@ type RenderContext = {
   parent?: any;
   node?: HTMLElement | Text | null;
   children: Map<unknown, RenderContext>;
-  rerender?: () => void;
+  rerender?: (force?: boolean) => void;
   selectionStart?: number; // for text(area) input only
   hooks: HookContext[];
   hookIndex: number;
+  force?: boolean;
 };
 
 export const renderStack: RenderContext[] = [];
@@ -215,8 +216,9 @@ export function render(
     }
     render(ele.props.children, node, childRenderContext(ctx, ele.key));
   } else if (typeof ele.type === 'function') {
-    ctx.rerender = () => {
+    ctx.rerender = (force?: boolean) => {
       ctx.hookIndex = 0;
+      ctx.force = force;
       renderStack.unshift(ctx);
       render(ele.type(ele.props), parent, childRenderContext(ctx, ele.key));
       renderStack.shift();

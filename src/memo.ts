@@ -1,3 +1,5 @@
+import { renderStack } from './render';
+
 const defaultAreEqual = (a: any, b: any): boolean => {
   const aKeys = Object.keys(a);
   const bKeys = Object.keys(b);
@@ -15,9 +17,15 @@ export function memo<Props, Result>(
   // FIXME potential memory leaks, use weak ref?
   const cache: [Props, Result][] = [];
   return (props: Props) => {
-    const found = cache.find((item) => areEqual(item[0], props));
-    if (found) {
-      return found[1];
+    const ctx = renderStack[0];
+    const index = cache.findIndex((item) => areEqual(item[0], props));
+    if (index >= 0) {
+      if (ctx.force) {
+        // force re-render
+        cache.splice(index, 1);
+      } else {
+        return cache[index][1];
+      }
     }
     const result = func(props);
     cache.push([props, result]);

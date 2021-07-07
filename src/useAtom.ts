@@ -72,7 +72,7 @@ export function useAtom<Value, Update>(
           // TODO error, promise
           if (!Object.is(nextAtomState.v, prevValue)) {
             prevValue = nextAtomState.v;
-            ctx.rerender?.();
+            ctx.rerender?.(true);
           }
         }),
         atom,
