@@ -9,7 +9,7 @@ type HookContext = {
 type RenderContext = {
   ele?: any;
   parent?: any;
-  node?: HTMLElement | Text | null;
+  node: HTMLElement | Text | null;
   children: Map<unknown, RenderContext>;
   rerender?: (force?: boolean) => void;
   selectionStart?: number; // for text(area) input only
@@ -22,6 +22,7 @@ export const renderStack: RenderContext[] = [];
 
 const createRenderContext = () => {
   const ctx: RenderContext = {
+    node: null,
     children: new Map(),
     hooks: [],
     hookIndex: 0,
@@ -64,6 +65,7 @@ const unmount = (
 
   if (!willReplaceChild && ctx.parent && ctx.node) {
     ctx.parent.removeChild(ctx.node);
+    delete ctx.parent;
   }
 };
 
