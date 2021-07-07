@@ -142,7 +142,7 @@ const App = () => {
       <div className="jumbotron">
         <div className="row">
           <div className="col-md-6">
-            <h1>Jotai</h1>
+            <h1>jotai-jsx</h1>
           </div>
           <div className="col-md-6">
             <div className="row">
