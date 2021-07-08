@@ -12,6 +12,9 @@
   "env": {
     "browser": true
   },
+  "globals": {
+    "JSX": "readonly"
+  },
   "settings": {
     "import/resolver": {
       "node": {

@@ -1,5 +1,14 @@
 import type { Atom, SetAtom } from './vendor/atom';
 
+type UnknownElement =
+  | JSX.Element
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | (JSX.Element | string | number | boolean | null | undefined)[];
+
 type HookContext = {
   cleanup?: () => void;
   atom?: Atom<unknown>;
@@ -7,7 +16,7 @@ type HookContext = {
 };
 
 type RenderContext = {
-  ele?: any;
+  ele?: UnknownElement;
   parent?: HTMLElement;
   node: HTMLElement | Text | null;
   children: Map<unknown, RenderContext>;
@@ -97,7 +106,11 @@ const normalizeStyle = (value: unknown): string => {
     .join(';');
 };
 
-const attachProps = (ele: any, node: HTMLElement, ctx: RenderContext) => {
+const attachProps = (
+  ele: JSX.Element,
+  node: HTMLElement,
+  ctx: RenderContext,
+) => {
   Object.keys(ele.props).forEach((key) => {
     if (key === 'children') {
       // do nothing
@@ -145,7 +158,7 @@ const attachProps = (ele: any, node: HTMLElement, ctx: RenderContext) => {
 };
 
 export function render(
-  ele: any,
+  ele: UnknownElement,
   parent: HTMLElement,
   ctx: RenderContext = createRenderContext(),
 ) {
@@ -164,16 +177,16 @@ export function render(
   const willReplaceChild =
     (typeof ele === 'string' ||
       typeof ele === 'number' ||
-      typeof ele?.type === 'string') &&
+      typeof (ele as { type?: unknown } | undefined)?.type === 'string') &&
     ctx.parent === parent;
   const prevChildKeys = new Set(ctx.children.keys());
   if (Array.isArray(ele)) {
     ele.forEach((item, index) => {
-      const childKey = item?.key ?? index;
+      const childKey = (item as { key?: unknown } | undefined)?.key ?? index;
       prevChildKeys.delete(childKey);
     });
-  } else if (ele?.type) {
-    const childKey = ele.key;
+  } else if ((ele as { type?: unknown } | undefined)?.type) {
+    const childKey = (ele as { key?: unknown } | undefined)?.key;
     prevChildKeys.delete(childKey);
   }
   prevChildKeys.forEach((childKey) => {
@@ -183,7 +196,7 @@ export function render(
   });
   unmount(ctx, true, willReplaceChild);
 
-  if (ele === null || ele === undefined || ele === false) {
+  if (ele === null || ele === undefined || ele === false || ele === true) {
     // do nothing
   } else if (typeof ele === 'string' || typeof ele === 'number') {
     node = document.createTextNode(String(ele));
@@ -195,7 +208,8 @@ export function render(
   } else if (Array.isArray(ele)) {
     ele.forEach((item, index) => {
       // TODO test array item key works as expected?
-      render(item, parent, childRenderContext(ctx, item?.key ?? index));
+      const childKey = (item as { key?: unknown } | undefined)?.key ?? index;
+      render(item, parent, childRenderContext(ctx, childKey));
     });
   } else if (ele.type === Symbol.for('react.fragment')) {
     render(ele.props.children, parent, childRenderContext(ctx, ele.key));
