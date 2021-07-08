@@ -49,13 +49,13 @@ export function useAtom<Value, Update>(
   const hookCtx: typeof renderStack[number]['hooks'][number] | undefined =
     ctx.hooks[hookIndex];
 
-  type SetAtomType = (update: Update) => void;
+  type SetAtomType = SetAtom<Update>;
   const setAtom: SetAtomType =
     hookCtx?.atom === atom
       ? (hookCtx?.setAtom as SetAtomType)
-      : (update) => {
+      : (update?: Update) => {
           if (isWritable(atom)) {
-            writeAtom(globalState, atom, update);
+            writeAtom(globalState, atom, update as Update);
           } else {
             throw new Error('not writable atom');
           }
@@ -76,7 +76,7 @@ export function useAtom<Value, Update>(
           }
         }),
         atom,
-        setAtom,
+        setAtom: setAtom as SetAtom<unknown>,
       };
     }
     flushPending(globalState);

@@ -2,17 +2,17 @@ import type { Atom, SetAtom } from './vendor/atom';
 
 type HookContext = {
   cleanup?: () => void;
-  atom?: Atom<any>;
-  setAtom?: SetAtom<any>;
+  atom?: Atom<unknown>;
+  setAtom?: SetAtom<unknown>;
 };
 
 type RenderContext = {
   ele?: any;
-  parent?: any;
+  parent?: HTMLElement;
   node: HTMLElement | Text | null;
   children: Map<unknown, RenderContext>;
   rerender?: (force?: boolean) => void;
-  selectionStart?: number; // for text(area) input only
+  selectionStart: number | null; // for text(area) input only
   hooks: HookContext[];
   hookIndex: number;
   force?: boolean;
@@ -24,6 +24,7 @@ const createRenderContext = () => {
   const ctx: RenderContext = {
     node: null,
     children: new Map(),
+    selectionStart: null,
     hooks: [],
     hookIndex: 0,
   };
@@ -78,9 +79,9 @@ const normalizeStyle = (value: unknown): string => {
   if (Array.isArray(value)) {
     return value.map(normalizeStyle).join(';');
   }
-  return Object.keys(value as any)
+  return Object.keys(value as Record<string, unknown>)
     .map((key) => {
-      const styleValue = (value as any)[key];
+      const styleValue = (value as Record<string, unknown>)[key];
       if (
         styleValue === null ||
         styleValue === undefined ||
@@ -105,19 +106,21 @@ const attachProps = (ele: any, node: HTMLElement, ctx: RenderContext) => {
       'value' in ele.props &&
       (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement)
     ) {
-      node.addEventListener('input', (event: any) => {
+      node.addEventListener('input', (event) => {
         if (node === ctx.node) {
-          ctx.selectionStart = event.target.selectionStart;
+          ctx.selectionStart =
+            (event.target as HTMLInputElement | HTMLTextAreaElement | undefined)
+              ?.selectionStart ?? null;
           ele.props[key](event);
         }
       });
       node.addEventListener('blur', () => {
         if (node === ctx.node && !inRender) {
-          delete ctx.selectionStart;
+          ctx.selectionStart = null;
         }
       });
     } else if (key.startsWith('on')) {
-      node.addEventListener(key.slice(2).toLowerCase(), (event: any) => {
+      node.addEventListener(key.slice(2).toLowerCase(), (event) => {
         if (node === ctx.node) {
           ele.props[key](event);
         }
@@ -143,7 +146,7 @@ const attachProps = (ele: any, node: HTMLElement, ctx: RenderContext) => {
 
 export function render(
   ele: any,
-  parent: any,
+  parent: HTMLElement,
   ctx: RenderContext = createRenderContext(),
 ) {
   if (ele === ctx.ele) {
@@ -200,22 +203,23 @@ export function render(
     node = document.createElement(ele.type);
     attachProps(ele, node as HTMLElement, ctx);
     if (ctx.parent === parent && ctx.node) {
-      parent.replaceChild(node, ctx.node);
+      parent.replaceChild(node as HTMLElement, ctx.node);
     } else {
-      parent.appendChild(node);
+      parent.appendChild(node as HTMLElement);
     }
     if (
-      Number.isFinite(ctx.selectionStart) &&
+      ctx.selectionStart != null &&
       (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement)
     ) {
       // HACK recover focus and cursor position
       node.focus();
-      node.setSelectionRange(
-        ctx.selectionStart as number,
-        ctx.selectionStart as number,
-      );
+      node.setSelectionRange(ctx.selectionStart, ctx.selectionStart);
     }
-    render(ele.props.children, node, childRenderContext(ctx, ele.key));
+    render(
+      ele.props.children,
+      node as HTMLElement,
+      childRenderContext(ctx, ele.key),
+    );
   } else if (typeof ele.type === 'function') {
     ctx.rerender = (force?: boolean) => {
       ctx.hookIndex = 0;
