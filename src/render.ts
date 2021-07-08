@@ -19,6 +19,8 @@ type RenderContext = {
   ele?: UnknownElement;
   parent?: HTMLElement;
   node: HTMLElement | Text | null;
+  firstChild?: RenderContext;
+  nextSibling?: RenderContext;
   children: Map<unknown, RenderContext>;
   rerender?: (force?: boolean) => void;
   selectionStart: number | null; // for text(area) input only
@@ -206,13 +208,24 @@ export function render(
       parent.appendChild(node);
     }
   } else if (Array.isArray(ele)) {
+    let previousSibling: RenderContext | undefined;
     ele.forEach((item, index) => {
       // TODO test array item key works as expected?
       const childKey = (item as { key?: unknown } | undefined)?.key ?? index;
-      render(item, parent, childRenderContext(ctx, childKey));
+      const childCtx = childRenderContext(ctx, childKey);
+      if (index === 0) {
+        ctx.firstChild = childCtx;
+      }
+      if (previousSibling) {
+        previousSibling.nextSibling = childCtx;
+      }
+      previousSibling = childCtx;
+      render(item, parent, childCtx);
     });
   } else if (ele.type === Symbol.for('react.fragment')) {
-    render(ele.props.children, parent, childRenderContext(ctx, ele.key));
+    const childCtx = childRenderContext(ctx, ele.key);
+    ctx.firstChild = childCtx;
+    render(ele.props.children, parent, childCtx);
   } else if (typeof ele.type === 'string') {
     node = document.createElement(ele.type);
     attachProps(ele, node as HTMLElement, ctx);
@@ -229,17 +242,17 @@ export function render(
       node.focus();
       node.setSelectionRange(ctx.selectionStart, ctx.selectionStart);
     }
-    render(
-      ele.props.children,
-      node as HTMLElement,
-      childRenderContext(ctx, ele.key),
-    );
+    const childCtx = childRenderContext(ctx, ele.key);
+    ctx.firstChild = childCtx;
+    render(ele.props.children, node as HTMLElement, childCtx);
   } else if (typeof ele.type === 'function') {
     ctx.rerender = (force?: boolean) => {
       ctx.hookIndex = 0;
       ctx.force = force;
+      const childCtx = childRenderContext(ctx, ele.key);
+      ctx.firstChild = childCtx;
       renderStack.unshift(ctx);
-      render(ele.type(ele.props), parent, childRenderContext(ctx, ele.key));
+      render(ele.type(ele.props), parent, childCtx);
       renderStack.shift();
     };
     ctx.rerender();
