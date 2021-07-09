@@ -19,9 +19,8 @@ type RenderContext = {
   ele?: UnknownElement;
   parent?: HTMLElement;
   node: HTMLElement | Text | null;
-  firstChild?: RenderContext;
-  nextSibling?: RenderContext;
-  children: Map<unknown, RenderContext>;
+  key: unknown;
+  children: RenderContext[];
   rerender?: (force?: boolean) => void;
   selectionStart: number | null; // for text(area) input only
   hooks: HookContext[];
@@ -31,10 +30,11 @@ type RenderContext = {
 
 export const renderStack: RenderContext[] = [];
 
-const createRenderContext = () => {
+const createRenderContext = (key?: unknown) => {
   const ctx: RenderContext = {
     node: null,
-    children: new Map(),
+    key,
+    children: [],
     selectionStart: null,
     hooks: [],
     hookIndex: 0,
@@ -43,23 +43,17 @@ const createRenderContext = () => {
 };
 
 const childRenderContext = (ctx: RenderContext, key: unknown) => {
-  let childCtx = ctx.children.get(key);
+  let childCtx = ctx.children.find((x) => x.key === key);
   if (!childCtx) {
-    childCtx = createRenderContext();
-    ctx.children.set(key, childCtx);
+    childCtx = createRenderContext(key);
   }
   return childCtx;
 };
 
-const unmount = (
-  ctx: RenderContext,
-  noRecursive = false,
-  willReplaceChild = false,
-) => {
+// TODO reivew unmount code&behavior
+const unmount = (ctx: RenderContext, noRecursive = false) => {
   if (!noRecursive) {
-    new Set(ctx.children.keys()).forEach((childKey) => {
-      const childCtx = ctx.children.get(childKey) as RenderContext;
-      ctx.children.delete(childKey);
+    ctx.children.forEach((childCtx) => {
       unmount(childCtx);
     });
   }
@@ -74,11 +68,24 @@ const unmount = (
       });
     });
   }
+};
 
-  if (!willReplaceChild && ctx.parent && ctx.node) {
-    ctx.parent.removeChild(ctx.node);
-    delete ctx.parent;
+const removeAllNodes = (ctx: RenderContext): Node | null => {
+  let nextSibling: Node | null = null;
+  if (ctx.node) {
+    if (ctx.parent) {
+      if (ctx.node.nextSibling) {
+        nextSibling = ctx.node.nextSibling;
+      }
+      ctx.parent.removeChild(ctx.node);
+      delete ctx.parent;
+    }
+  } else {
+    ctx.children.forEach((childCtx) => {
+      nextSibling = removeAllNodes(childCtx);
+    });
   }
+  return nextSibling;
 };
 
 let inRender = 0;
@@ -175,65 +182,51 @@ export function render(
 
   ++inRender;
   let node: HTMLElement | Text | null = null;
+  const children: RenderContext[] = [];
 
-  const willReplaceChild =
-    (typeof ele === 'string' ||
-      typeof ele === 'number' ||
-      typeof (ele as { type?: unknown } | undefined)?.type === 'string') &&
-    ctx.parent === parent;
-  const prevChildKeys = new Set(ctx.children.keys());
+  const childrenToUnmount = Array.from(ctx.children);
   if (Array.isArray(ele)) {
     ele.forEach((item, index) => {
       const childKey = (item as { key?: unknown } | undefined)?.key ?? index;
-      prevChildKeys.delete(childKey);
+      const foundIndex = childrenToUnmount.findIndex((x) => x.key === childKey);
+      if (foundIndex >= 0) {
+        childrenToUnmount.splice(foundIndex, 1);
+      }
     });
   } else if ((ele as { type?: unknown } | undefined)?.type) {
     const childKey = (ele as { key?: unknown } | undefined)?.key;
-    prevChildKeys.delete(childKey);
+    const foundIndex = childrenToUnmount.findIndex((x) => x.key === childKey);
+    if (foundIndex >= 0) {
+      childrenToUnmount.splice(foundIndex, 1);
+    }
   }
-  prevChildKeys.forEach((childKey) => {
-    const childCtx = ctx.children.get(childKey) as RenderContext;
-    ctx.children.delete(childKey);
+  childrenToUnmount.forEach((childCtx) => {
     unmount(childCtx);
   });
-  unmount(ctx, true, willReplaceChild);
+  unmount(ctx, true);
+  const nextSibling = removeAllNodes(ctx);
 
   if (ele === null || ele === undefined || ele === false || ele === true) {
     // do nothing
   } else if (typeof ele === 'string' || typeof ele === 'number') {
     node = document.createTextNode(String(ele));
-    if (ctx.parent === parent && ctx.node) {
-      parent.replaceChild(node, ctx.node);
-    } else {
-      parent.appendChild(node);
-    }
+    parent.insertBefore(node, nextSibling);
   } else if (Array.isArray(ele)) {
-    let previousSibling: RenderContext | undefined;
     ele.forEach((item, index) => {
       // TODO test array item key works as expected?
       const childKey = (item as { key?: unknown } | undefined)?.key ?? index;
       const childCtx = childRenderContext(ctx, childKey);
-      if (index === 0) {
-        ctx.firstChild = childCtx;
-      }
-      if (previousSibling) {
-        previousSibling.nextSibling = childCtx;
-      }
-      previousSibling = childCtx;
+      children.push(childCtx);
       render(item, parent, childCtx);
     });
   } else if (ele.type === Symbol.for('react.fragment')) {
     const childCtx = childRenderContext(ctx, ele.key);
-    ctx.firstChild = childCtx;
+    children.push(childCtx);
     render(ele.props.children, parent, childCtx);
   } else if (typeof ele.type === 'string') {
     node = document.createElement(ele.type);
-    attachProps(ele, node as HTMLElement, ctx);
-    if (ctx.parent === parent && ctx.node) {
-      parent.replaceChild(node as HTMLElement, ctx.node);
-    } else {
-      parent.appendChild(node as HTMLElement);
-    }
+    attachProps(ele, node, ctx);
+    parent.insertBefore(node, nextSibling);
     if (
       ctx.selectionStart != null &&
       (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement)
@@ -243,14 +236,14 @@ export function render(
       node.setSelectionRange(ctx.selectionStart, ctx.selectionStart);
     }
     const childCtx = childRenderContext(ctx, ele.key);
-    ctx.firstChild = childCtx;
-    render(ele.props.children, node as HTMLElement, childCtx);
+    children.push(childCtx);
+    render(ele.props.children, node, childCtx);
   } else if (typeof ele.type === 'function') {
+    const childCtx = childRenderContext(ctx, ele.key);
+    children.push(childCtx);
     ctx.rerender = (force?: boolean) => {
       ctx.hookIndex = 0;
       ctx.force = force;
-      const childCtx = childRenderContext(ctx, ele.key);
-      ctx.firstChild = childCtx;
       renderStack.unshift(ctx);
       render(ele.type(ele.props), parent, childCtx);
       renderStack.shift();
@@ -264,5 +257,6 @@ export function render(
   ctx.ele = ele;
   ctx.parent = parent;
   ctx.node = node;
+  ctx.children = children;
   --inRender;
 }

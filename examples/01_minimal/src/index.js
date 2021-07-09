@@ -8,7 +8,7 @@ let numRendered = 0;
 const Counter = () => {
   const [count, setCount] = useAtom(countAtom);
   return (
-    <div>
+    <>
       numRendered: {++numRendered}
       <div>
         <span>Count: {count}</span>
@@ -19,7 +19,7 @@ const Counter = () => {
           -1
         </button>
       </div>
-    </div>
+    </>
   );
 };
 
