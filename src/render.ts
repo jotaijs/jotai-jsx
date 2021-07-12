@@ -187,6 +187,7 @@ export function render(
     if (ctx.node) {
       if (parent !== ctx.parent) {
         parent.insertBefore(ctx.node, ctx.nextSibling);
+        ctx.parent = parent;
       }
       return;
     }

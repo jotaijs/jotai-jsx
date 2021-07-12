@@ -32,11 +32,7 @@ describe('useAtom spec', () => {
       return (
         <>
           <p>{count}</p>
-          <button
-            type="button"
-            id="btn01"
-            onClick={() => setCount((c) => c + 1)}
-          >
+          <button type="button" onClick={() => setCount((c) => c + 1)}>
             button
           </button>
         </>
@@ -50,23 +46,23 @@ describe('useAtom spec', () => {
       document.body,
     );
     expect(document.body.innerHTML).toMatchInlineSnapshot(
-      `"<div>body<p>1</p><button type=\\"button\\" id=\\"btn01\\">button</button></div>"`,
+      `"<div>body<p>1</p><button type=\\"button\\">button</button></div>"`,
     );
     await Promise.resolve(); // wait for subscription
-    document.getElementById('btn01')?.click();
+    document.getElementsByTagName('button')[0].click();
     expect(document.body.innerHTML).toMatchInlineSnapshot(
-      `"<div>body<p>2</p><button type=\\"button\\" id=\\"btn01\\">button</button></div>"`,
+      `"<div>body<p>2</p><button type=\\"button\\">button</button></div>"`,
     );
   });
 
   it('flat two counters', async () => {
     const countAtom = atom(1);
-    const Counter = ({ id }: { id: string }) => {
+    const Counter = () => {
       const [count, setCount] = useAtom(countAtom);
       return (
         <>
           <p>{count}</p>
-          <button type="button" id={id} onClick={() => setCount((c) => c + 1)}>
+          <button type="button" onClick={() => setCount((c) => c + 1)}>
             button
           </button>
         </>
@@ -75,19 +71,19 @@ describe('useAtom spec', () => {
     render(
       <div>
         body
-        <Counter id="btn01" />
+        <Counter />
         another
-        <Counter id="btn02" />
+        <Counter />
       </div>,
       document.body,
     );
     expect(document.body.innerHTML).toMatchInlineSnapshot(
-      `"<div>body<p>1</p><button type=\\"button\\" id=\\"btn01\\">button</button>another<p>1</p><button type=\\"button\\" id=\\"btn02\\">button</button></div>"`,
+      `"<div>body<p>1</p><button type=\\"button\\">button</button>another<p>1</p><button type=\\"button\\">button</button></div>"`,
     );
     await Promise.resolve(); // wait for subscription
-    document.getElementById('btn01')?.click();
+    document.getElementsByTagName('button')[1].click();
     expect(document.body.innerHTML).toMatchInlineSnapshot(
-      `"<div>body<p>2</p><button type=\\"button\\" id=\\"btn01\\">button</button>another<p>2</p><button type=\\"button\\" id=\\"btn02\\">button</button></div>"`,
+      `"<div>body<p>2</p><button type=\\"button\\">button</button>another<p>2</p><button type=\\"button\\">button</button></div>"`,
     );
   });
 
@@ -100,7 +96,6 @@ describe('useAtom spec', () => {
           {visible ? 'visible' : null}
           <button
             type="button"
-            id="btn01"
             onClick={() => {
               setVisible((prevVisible) => !prevVisible);
             }}
@@ -117,12 +112,12 @@ describe('useAtom spec', () => {
       document.body,
     );
     expect(document.body.innerHTML).toMatchInlineSnapshot(
-      `"visible<button type=\\"button\\" id=\\"btn01\\">toggle</button>"`,
+      `"visible<button type=\\"button\\">toggle</button>"`,
     );
     await Promise.resolve(); // wait for subscription
-    document.getElementById('btn01')?.click();
+    document.getElementsByTagName('button')[0].click();
     expect(document.body.innerHTML).toMatchInlineSnapshot(
-      `"<button type=\\"button\\" id=\\"btn01\\">toggle</button>"`,
+      `"<button type=\\"button\\">toggle</button>"`,
     );
   });
 });
