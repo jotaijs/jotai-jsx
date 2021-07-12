@@ -72,8 +72,12 @@ const unmount = (ctx: RenderContext, noRecursive = false) => {
   }
 };
 
-const removeAllNodes = (ctx: RenderContext) => {
-  if (ctx.node) {
+const removeAllNodes = (parent: HTMLElement, ctx: RenderContext) => {
+  if (parent !== ctx.parent) {
+    if (ctx.nextSibling?.parentNode !== parent) {
+      ctx.nextSibling = null;
+    }
+  } else if (ctx.node) {
     if (ctx.parent) {
       if (ctx.node.nextSibling) {
         ctx.nextSibling = ctx.node.nextSibling;
@@ -84,7 +88,7 @@ const removeAllNodes = (ctx: RenderContext) => {
   } else {
     let nextSibling: Node | null = null;
     ctx.children.forEach((childCtx) => {
-      removeAllNodes(childCtx);
+      removeAllNodes(parent, childCtx);
       if (childCtx.nextSibling) {
         nextSibling = childCtx.nextSibling;
       }
@@ -180,7 +184,10 @@ export function render(
 ) {
   if (ele === ctx.ele) {
     // TODO test stable element no re-rendering
-    if (ctx.node && parent === ctx.parent) {
+    if (ctx.node) {
+      if (parent !== ctx.parent) {
+        parent.insertBefore(ctx.node, ctx.nextSibling);
+      }
       return;
     }
   }
@@ -209,11 +216,7 @@ export function render(
     unmount(childCtx);
   });
   unmount(ctx, true);
-  if (parent === ctx.parent) {
-    removeAllNodes(ctx);
-  } else {
-    ctx.nextSibling = null;
-  }
+  removeAllNodes(parent, ctx);
 
   if (ele === null || ele === undefined || ele === false || ele === true) {
     // do nothing
