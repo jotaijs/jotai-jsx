@@ -19,6 +19,7 @@ type RenderContext = {
   ele?: UnknownElement;
   parent?: HTMLElement;
   node: HTMLElement | Text | null;
+  nextSibling: Node | null;
   key: unknown;
   children: RenderContext[];
   rerender?: (force?: boolean) => void;
@@ -33,6 +34,7 @@ export const renderStack: RenderContext[] = [];
 const createRenderContext = (key?: unknown) => {
   const ctx: RenderContext = {
     node: null,
+    nextSibling: null,
     key,
     children: [],
     selectionStart: null,
@@ -70,22 +72,27 @@ const unmount = (ctx: RenderContext, noRecursive = false) => {
   }
 };
 
-const removeAllNodes = (ctx: RenderContext): Node | null => {
-  let nextSibling: Node | null = null;
+const removeAllNodes = (ctx: RenderContext) => {
   if (ctx.node) {
     if (ctx.parent) {
       if (ctx.node.nextSibling) {
-        nextSibling = ctx.node.nextSibling;
+        ctx.nextSibling = ctx.node.nextSibling;
       }
       ctx.parent.removeChild(ctx.node);
       delete ctx.parent;
     }
   } else {
+    let nextSibling: Node | null = null;
     ctx.children.forEach((childCtx) => {
-      nextSibling = removeAllNodes(childCtx);
+      removeAllNodes(childCtx);
+      if (childCtx.nextSibling) {
+        nextSibling = childCtx.nextSibling;
+      }
+    });
+    ctx.children.forEach((childCtx) => {
+      childCtx.nextSibling = nextSibling;
     });
   }
-  return nextSibling;
 };
 
 let inRender = 0;
@@ -173,11 +180,9 @@ export function render(
 ) {
   if (ele === ctx.ele) {
     // TODO test stable element no re-rendering
-    if (ctx.node && parent !== ctx.parent) {
-      parent.appendChild(ctx.node);
-      ctx.parent = parent;
+    if (ctx.node && parent === ctx.parent) {
+      return;
     }
-    return;
   }
 
   ++inRender;
@@ -204,13 +209,17 @@ export function render(
     unmount(childCtx);
   });
   unmount(ctx, true);
-  const nextSibling = removeAllNodes(ctx);
+  if (parent === ctx.parent) {
+    removeAllNodes(ctx);
+  } else {
+    ctx.nextSibling = null;
+  }
 
   if (ele === null || ele === undefined || ele === false || ele === true) {
     // do nothing
   } else if (typeof ele === 'string' || typeof ele === 'number') {
     node = document.createTextNode(String(ele));
-    parent.insertBefore(node, nextSibling);
+    parent.insertBefore(node, ctx.nextSibling);
   } else if (Array.isArray(ele)) {
     ele.forEach((item, index) => {
       // TODO test array item key works as expected?
@@ -226,7 +235,7 @@ export function render(
   } else if (typeof ele.type === 'string') {
     node = document.createElement(ele.type);
     attachProps(ele, node, ctx);
-    parent.insertBefore(node, nextSibling);
+    parent.insertBefore(node, ctx.nextSibling);
     if (
       ctx.selectionStart != null &&
       (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement)
