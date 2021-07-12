@@ -183,14 +183,12 @@ export function render(
   parent: HTMLElement,
   ctx: RenderContext = createRenderContext(),
 ) {
-  if (ele === ctx.ele) {
-    if (ctx.node) {
-      if (parent !== ctx.parent) {
-        parent.insertBefore(ctx.node, ctx.nextSibling);
-        ctx.parent = parent;
-      }
-      return;
+  if (ele === ctx.ele && ctx.node) {
+    if (parent !== ctx.parent) {
+      parent.insertBefore(ctx.node, ctx.nextSibling);
+      ctx.parent = parent;
     }
+    return;
   }
 
   ++inRender;
