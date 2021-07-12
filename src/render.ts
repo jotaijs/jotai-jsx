@@ -74,6 +74,7 @@ const unmount = (ctx: RenderContext, noRecursive = false) => {
 
 const removeAllNodes = (parent: HTMLElement, ctx: RenderContext) => {
   if (parent !== ctx.parent) {
+    // NOTE not sure why this condition made it work
     if (ctx.nextSibling?.parentNode !== parent) {
       ctx.nextSibling = null;
     }
@@ -183,7 +184,6 @@ export function render(
   ctx: RenderContext = createRenderContext(),
 ) {
   if (ele === ctx.ele) {
-    // TODO test stable element no re-rendering
     if (ctx.node) {
       if (parent !== ctx.parent) {
         parent.insertBefore(ctx.node, ctx.nextSibling);
@@ -226,7 +226,6 @@ export function render(
     parent.insertBefore(node, ctx.nextSibling);
   } else if (Array.isArray(ele)) {
     ele.forEach((item, index) => {
-      // TODO test array item key works as expected?
       const childKey = (item as { key?: unknown } | undefined)?.key ?? index;
       const childCtx = childRenderContext(ctx, childKey);
       children.push(childCtx);
