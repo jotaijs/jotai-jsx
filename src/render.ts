@@ -72,32 +72,48 @@ const unmount = (ctx: RenderContext, noRecursive = false) => {
   }
 };
 
-const removeAllNodes = (parent: HTMLElement, ctx: RenderContext) => {
-  if (parent !== ctx.parent) {
-    // NOTE not sure why this condition made it work
-    if (ctx.nextSibling?.parentNode !== parent) {
-      ctx.nextSibling = null;
-    }
-  } else if (ctx.node) {
-    if (ctx.parent) {
-      if (ctx.node.nextSibling) {
-        ctx.nextSibling = ctx.node.nextSibling;
-      }
-      ctx.parent.removeChild(ctx.node);
-      delete ctx.parent;
-    }
-  } else {
-    let nextSibling: Node | null = null;
-    ctx.children.forEach((childCtx) => {
-      removeAllNodes(parent, childCtx);
-      if (childCtx.nextSibling) {
-        nextSibling = childCtx.nextSibling;
-      }
-    });
-    ctx.children.forEach((childCtx) => {
-      childCtx.nextSibling = nextSibling;
-    });
+const setChildrenNextSibling = (
+  parent: HTMLElement,
+  ctx: RenderContext,
+  nextSibling: Node | null,
+) => {
+  // FIXME we shouldn't change if it's different parent
+  ctx.nextSibling = nextSibling;
+  ctx.children.forEach((childCtx) => {
+    setChildrenNextSibling(parent, childCtx, nextSibling);
+  });
+};
+
+const removeAllNodes = (
+  parent: HTMLElement,
+  ctx: RenderContext,
+): Node | null | false => {
+  if (!ctx.parent) {
+    // already removed
+    return ctx.nextSibling;
   }
+  if (ctx.node) {
+    // has node
+    ctx.nextSibling = ctx.node.nextSibling;
+    ctx.parent.removeChild(ctx.node);
+    delete ctx.parent;
+    return ctx.nextSibling;
+  }
+  if (!ctx.children.length) {
+    // no children
+    return false;
+  }
+  // has children
+  let nextSibling: Node | null = null;
+  ctx.children.forEach((childCtx) => {
+    const childNextSibling = removeAllNodes(parent, childCtx);
+    if (childNextSibling !== false) {
+      nextSibling = childNextSibling;
+    }
+  });
+  setChildrenNextSibling(parent, ctx, nextSibling);
+  delete ctx.parent;
+  return ctx.nextSibling;
 };
 
 let inRender = 0;
@@ -185,7 +201,11 @@ export function render(
 ) {
   if (ele === ctx.ele && ctx.node) {
     if (parent !== ctx.parent) {
-      parent.insertBefore(ctx.node, ctx.nextSibling);
+      parent.insertBefore(
+        ctx.node,
+        // FIXME this is a hack, should be fixed in setChildrenNextSibling
+        ctx.nextSibling?.parentNode === parent ? ctx.nextSibling : null,
+      );
       ctx.parent = parent;
     }
     return;
