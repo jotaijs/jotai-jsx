@@ -14,21 +14,18 @@ export function memo<Props, Result>(
   func: (props: Props) => Result,
   areEqual: (a: Props, b: Props) => boolean = defaultAreEqual,
 ) {
-  // FIXME potential memory leaks, use weak ref?
-  const cache: [Props, Result][] = [];
   return (props: Props) => {
     const ctx = renderStack[0];
-    const index = cache.findIndex((item) => areEqual(item[0], props));
-    if (index >= 0) {
-      if (ctx.force) {
-        // force re-render
-        cache.splice(index, 1);
-      } else {
-        return cache[index][1];
-      }
+    if (
+      !ctx.force &&
+      ctx.memoProps &&
+      areEqual(ctx.memoProps as Props, props)
+    ) {
+      return ctx.memoResult as Result;
     }
     const result = func(props);
-    cache.push([props, result]);
+    ctx.memoProps = props;
+    ctx.memoResult = result;
     return result;
   };
 }

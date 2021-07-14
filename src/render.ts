@@ -27,6 +27,8 @@ type RenderContext = {
   hooks: HookContext[];
   hookIndex: number;
   force?: boolean;
+  memoProps?: unknown;
+  memoResult?: unknown;
 };
 
 export const renderStack: RenderContext[] = [];
