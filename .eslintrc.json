@@ -18,7 +18,7 @@
   "settings": {
     "import/resolver": {
       "node": {
-        "extensions": [".js", ".ts", ".tsx"]
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
       }
     }
   },
@@ -28,12 +28,12 @@
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-explicit-any": "off",
-    "react/jsx-filename-extension": ["error", { "extensions": [".js", ".tsx"] }],
+    "react/jsx-filename-extension": ["error", { "extensions": [".js", ".jsx", ".tsx"] }],
     "react/prop-types": "off",
     "react/jsx-one-expression-per-line": "off",
     "import/extensions": ["error", "never"],
     "import/prefer-default-export": "off",
-    "import/no-unresolved": ["error", { "ignore": ["jotai-jsx"] }],
+    "import/no-unresolved": ["error", { "ignore": ["jotai-jsx", "vite"] }],
     "no-param-reassign": "off",
     "no-plusplus": "off",
     "no-bitwise": "off",

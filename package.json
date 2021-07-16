@@ -19,7 +19,7 @@
   "scripts": {
     "compile": "microbundle build -f modern,umd",
     "test": "run-s eslint tsc-test jest",
-    "eslint": "eslint --ext .js,.ts,.tsx .",
+    "eslint": "eslint --ext .js,.jsx,.ts,.tsx .",
     "jest": "jest --preset ts-jest/presets/js-with-ts __tests__/*.tsx",
     "tsc-test": "tsc --project . --noEmit",
     "examples:01_minimal": "DIR=01_minimal EXT=jsx webpack-cli serve",
