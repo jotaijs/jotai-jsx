@@ -4,19 +4,14 @@
   "private": true,
   "dependencies": {
     "jotai-jsx": "latest",
-    "react": "latest",
-    "react-scripts": "latest"
+    "react": "latest"
+  },
+  "devDependencies": {
+    "vite": "^2.4.2"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not ie <= 11",
-    "not op_mini all"
-  ]
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  }
 }

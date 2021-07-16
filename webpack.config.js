@@ -12,7 +12,7 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: `./examples/${DIR}/public/index.html`,
+      template: `./examples/${DIR}/index.html`,
     }),
   ],
   module: {
@@ -35,7 +35,7 @@ module.exports = {
   },
   devServer: {
     port: process.env.PORT || '8080',
-    contentBase: `./examples/${DIR}/public`,
+    contentBase: `./examples/${DIR}`,
     historyApiFallback: true,
   },
 };
