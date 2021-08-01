@@ -1,3 +1,4 @@
+import type { Atom, WritableAtom } from 'jotai';
 import {
   createState,
   readAtom,
@@ -5,9 +6,12 @@ import {
   subscribeAtom,
   flushPending,
 } from './vendor/vanilla';
-import type { Atom, WritableAtom, SetAtom } from './vendor/atom';
 
 import { renderStack } from './render';
+
+export type SetAtom<Update> = undefined extends Update
+  ? (update?: Update) => void
+  : (update: Update) => void;
 
 // TODO context
 const globalState = createState();

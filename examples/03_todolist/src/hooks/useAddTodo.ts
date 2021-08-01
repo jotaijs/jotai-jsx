@@ -1,4 +1,5 @@
-import { atom, useAtom } from 'jotai-jsx';
+import { atom } from 'jotai';
+import { useAtom } from 'jotai-jsx';
 
 import { stateAtom } from '../state';
 

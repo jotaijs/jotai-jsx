@@ -1,4 +1,4 @@
-import type { Atom, WritableAtom } from './atom'
+import type { Atom, WritableAtom } from 'jotai'
 
 type AnyAtom = Atom<unknown>
 type AnyWritableAtom = WritableAtom<unknown, unknown>

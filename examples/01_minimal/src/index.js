@@ -1,3 +1,4 @@
+import { atom } from 'jotai';
 import { render, atom, useAtom } from 'jotai-jsx';
 
 const countAtom = atom(0);

@@ -2,7 +2,8 @@
 /* eslint jsx-a11y/no-static-element-interactions: off */
 /* eslint jsx-a11y/click-events-have-key-events: off */
 
-import { memo, atom, useAtom } from 'jotai-jsx';
+import { atom } from 'jotai';
+import { memo, useAtom } from 'jotai-jsx';
 
 // prettier-ignore
 const A = ['pretty', 'large', 'big', 'small', 'tall', 'short', 'long', 'handsome', 'plain', 'quaint', 'clean', 'elegant', 'easy', 'angry', 'crazy', 'helpful', 'mushy', 'odd', 'unsightly', 'adorable', 'important', 'inexpensive', 'cheap', 'expensive', 'fancy'];

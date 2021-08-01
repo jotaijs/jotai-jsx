@@ -1,6 +1,7 @@
 /* eslint quotes: off */
 
-import { render, atom, useAtom } from '../src/index';
+import { atom } from 'jotai';
+import { render, useAtom } from '../src/index';
 
 describe('useAtom spec', () => {
   beforeEach(() => {

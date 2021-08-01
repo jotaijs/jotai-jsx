@@ -1,7 +1,8 @@
 /* eslint quotes: off */
 /* eslint no-console: off */
 
-import { render, memo, atom, useAtom } from '../src/index';
+import { atom } from 'jotai';
+import { render, memo, useAtom } from '../src/index';
 
 describe('key spec', () => {
   const consoleError = console.error;

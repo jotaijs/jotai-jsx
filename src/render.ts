@@ -1,4 +1,5 @@
-import type { Atom, SetAtom } from './vendor/atom';
+import type { Atom } from 'jotai';
+import type { SetAtom } from './useAtom';
 
 type UnknownElement =
   | JSX.Element

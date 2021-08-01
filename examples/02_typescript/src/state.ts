@@ -1,4 +1,4 @@
-import { atom } from 'jotai-jsx';
+import { atom } from 'jotai';
 
 const initialState = {
   count: 0,

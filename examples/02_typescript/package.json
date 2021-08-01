@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@types/react": "latest",
+    "jotai": "latest",
     "jotai-jsx": "latest",
     "react": "latest",
     "react-scripts": "latest",
