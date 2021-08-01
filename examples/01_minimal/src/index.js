@@ -1,5 +1,5 @@
 import { atom } from 'jotai';
-import { render, atom, useAtom } from 'jotai-jsx';
+import { render, useAtom } from 'jotai-jsx';
 
 const countAtom = atom(0);
 const textAtom = atom('hello');
