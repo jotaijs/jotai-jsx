@@ -79,7 +79,6 @@ const setChildrenNextSibling = (
   ctx: RenderContext,
   nextSibling: Node | null,
 ) => {
-  // FIXME we shouldn't change if it's different parent
   ctx.nextSibling = nextSibling;
   ctx.children.forEach((childCtx) => {
     setChildrenNextSibling(parent, childCtx, nextSibling);
@@ -205,7 +204,7 @@ export function render(
     if (parent !== ctx.parent) {
       parent.insertBefore(
         ctx.node,
-        // FIXME this is a hack, should be fixed in setChildrenNextSibling
+        // HACK there might be a better way than this
         ctx.nextSibling?.parentNode === parent ? ctx.nextSibling : null,
       );
       ctx.parent = parent;
