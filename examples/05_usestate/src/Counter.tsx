@@ -1,7 +1,18 @@
-import { useState } from 'jotai-jsx';
+/* eslint no-console: off */
 
-const Counter = () => {
+import { useState, useEffect } from 'jotai-jsx';
+
+const Counter = ({ name }: { name: string }) => {
   const [count, setCount] = useState(0);
+  useEffect(() => {
+    console.log('counter mount', name);
+    return () => {
+      console.log('counter unmount', name);
+    };
+  }, [name]);
+  useEffect(() => {
+    console.log('counter changed', name, count);
+  });
   return (
     <div>
       <span>Count: {count}</span>

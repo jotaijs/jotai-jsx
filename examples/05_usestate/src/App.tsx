@@ -14,13 +14,13 @@ const App = () => {
       {mode === 'A' && (
         <>
           <h1>Mode A</h1>
-          <Counter />
+          <Counter name="A" />
         </>
       )}
       {mode === 'B' && (
         <>
           <h1>Mode B</h1>
-          <Counter />
+          <Counter name="B" />
         </>
       )}
     </div>

@@ -68,7 +68,7 @@ const unmount = (ctx: RenderContext, noRecursive = false) => {
     const prevHooks = ctx.hooks;
     ctx.hooks = [];
     ctx.hookIndex = 0;
-    Promise.resolve(() => {
+    Promise.resolve().then(() => {
       prevHooks.reverse().forEach((hookCtx) => {
         hookCtx.cleanup?.();
       });
