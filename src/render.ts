@@ -14,6 +14,7 @@ type HookContext = {
   cleanup?: () => void;
   atom?: Atom<unknown>;
   setAtom?: SetAtom<unknown>;
+  constant?: unknown;
 };
 
 type RenderContext = {

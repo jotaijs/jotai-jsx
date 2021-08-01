@@ -53,17 +53,22 @@ export function useAtom<Value, Update>(
   const hookCtx: typeof renderStack[number]['hooks'][number] | undefined =
     ctx.hooks[hookIndex];
 
-  type SetAtomType = SetAtom<Update>;
-  const setAtom: SetAtomType =
-    hookCtx?.atom === atom
-      ? (hookCtx?.setAtom as SetAtomType)
-      : (update?: Update) => {
-          if (isWritable(atom)) {
-            writeAtom(globalState, atom, update as Update);
-          } else {
-            throw new Error('not writable atom');
-          }
-        };
+  let setAtom = (update?: Update) => {
+    if (isWritable(atom)) {
+      writeAtom(globalState, atom, update as Update);
+    } else {
+      throw new Error('not writable atom');
+    }
+  };
+
+  if (hookCtx) {
+    if (!hookCtx.setAtom) {
+      throw new Error('hook order changed');
+    }
+    if (hookCtx.atom === atom) {
+      setAtom = hookCtx.setAtom;
+    }
+  }
 
   // NOTE is promise microtask good?
   Promise.resolve().then(() => {
