@@ -52,6 +52,7 @@ export function useAtom<Value, Update>(
   const { hookIndex } = ctx;
   const hookCtx: typeof renderStack[number]['hooks'][number] | undefined =
     ctx.hooks[hookIndex];
+  ++ctx.hookIndex;
 
   let setAtom = (update?: Update) => {
     if (isWritable(atom)) {
