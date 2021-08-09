@@ -9,3 +9,4 @@ export { useEffect } from './compat/useEffect';
 export { useRef } from './compat/useRef';
 export { useMemo } from './compat/useMemo';
 export { useCallback } from './compat/useCallback';
+export { useReducer } from './compat/useReducer';
