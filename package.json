@@ -30,7 +30,7 @@
     "postcompile": "cp dist/index.modern.mjs dist/index.modern.js && cp dist/index.modern.mjs.map dist/index.modern.js.map",
     "test": "run-s eslint tsc-test jest",
     "eslint": "eslint --ext .js,.ts,.tsx .",
-    "jest": "jest --preset ts-jest/presets/js-with-ts __tests__/*.tsx",
+    "jest": "jest",
     "tsc-test": "tsc --project . --noEmit",
     "examples:01_minimal": "DIR=01_minimal EXT=js webpack-cli serve",
     "examples:02_typescript": "DIR=02_typescript EXT=tsx webpack-cli serve",
@@ -40,9 +40,7 @@
   },
   "jest": {
     "testEnvironment": "jsdom",
-    "transform": {
-      "^.+\\.ts$": "ts-jest"
-    }
+    "preset": "ts-jest/presets/js-with-ts"
   },
   "keywords": [
     "jotai",
