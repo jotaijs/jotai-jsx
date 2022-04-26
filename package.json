@@ -32,11 +32,11 @@
     "eslint": "eslint --ext .js,.ts,.tsx .",
     "jest": "jest",
     "tsc-test": "tsc --project . --noEmit",
-    "examples:01_minimal": "DIR=01_minimal EXT=js webpack-cli serve",
-    "examples:02_typescript": "DIR=02_typescript EXT=tsx webpack-cli serve",
-    "examples:03_todolist": "DIR=03_todolist EXT=tsx webpack-cli serve",
-    "examples:04_largetable": "DIR=04_largetable EXT=tsx webpack-cli serve",
-    "examples:05_usestate": "DIR=05_usestate EXT=tsx webpack-cli serve"
+    "examples:01_minimal": "DIR=01_minimal EXT=js webpack serve",
+    "examples:02_typescript": "DIR=02_typescript EXT=tsx webpack serve",
+    "examples:03_todolist": "DIR=03_todolist EXT=tsx webpack serve",
+    "examples:04_largetable": "DIR=04_largetable EXT=tsx webpack serve",
+    "examples:05_usestate": "DIR=05_usestate EXT=tsx webpack serve"
   },
   "jest": {
     "testEnvironment": "jsdom",
