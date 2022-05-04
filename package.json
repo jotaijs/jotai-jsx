@@ -5,7 +5,7 @@
   "author": "Daishi Kato",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dai-shi/jotai-jsx.git"
+    "url": "https://github.com/jotai-labs/jotai-jsx.git"
   },
   "source": "./src/index.ts",
   "main": "./dist/index.umd.js",
