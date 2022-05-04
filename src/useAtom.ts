@@ -1,11 +1,11 @@
 import type { Atom, WritableAtom } from 'jotai';
 import {
-  createState,
-  readAtom,
-  writeAtom,
-  subscribeAtom,
-  flushPending,
-} from './vendor/vanilla';
+  createStore,
+  READ_ATOM,
+  WRITE_ATOM,
+  COMMIT_ATOM,
+  SUBSCRIBE_ATOM,
+} from './vendor/store';
 
 import { renderStack } from './render';
 
@@ -14,7 +14,7 @@ export type SetAtom<Update> = undefined extends Update
   : (update: Update) => void;
 
 // TODO context
-const globalState = createState();
+const globalStore = createStore();
 
 const isWritable = <Value, Update>(
   atom: Atom<Value> | WritableAtom<Value, Update>,
@@ -44,8 +44,10 @@ export function useAtom<Value>(atom: Atom<Value>): [Value, never];
 export function useAtom<Value, Update>(
   atom: Atom<Value> | WritableAtom<Value, Update>,
 ) {
-  const atomState = readAtom(globalState, atom);
-  // TODO error, promise
+  const atomState = globalStore[READ_ATOM](atom);
+  if (!('v' in atomState)) {
+    throw new Error('TODO handle error and promise');
+  }
   const value = atomState.v;
 
   const ctx = renderStack[0];
@@ -56,7 +58,7 @@ export function useAtom<Value, Update>(
 
   let setAtom = (update?: Update) => {
     if (isWritable(atom)) {
-      writeAtom(globalState, atom, update as Update);
+      globalStore[WRITE_ATOM](atom, update as Update);
     } else {
       throw new Error('not writable atom');
     }
@@ -77,9 +79,11 @@ export function useAtom<Value, Update>(
       hookCtx?.cleanup?.();
       let prevValue = value;
       ctx.hooks[hookIndex] = {
-        cleanup: subscribeAtom(globalState, atom, () => {
-          const nextAtomState = readAtom(globalState, atom);
-          // TODO error, promise
+        cleanup: globalStore[SUBSCRIBE_ATOM](atom, () => {
+          const nextAtomState = globalStore[READ_ATOM](atom);
+          if (!('v' in nextAtomState)) {
+            throw new Error('TODO handle error and promise');
+          }
           if (!Object.is(nextAtomState.v, prevValue)) {
             prevValue = nextAtomState.v;
             ctx.rerender?.(true);
@@ -89,7 +93,7 @@ export function useAtom<Value, Update>(
         setAtom: setAtom as SetAtom<unknown>,
       };
     }
-    flushPending(globalState);
+    globalStore[COMMIT_ATOM](atom);
   });
 
   return [value, setAtom];
