@@ -4,7 +4,7 @@ type AnyAtom = Atom<unknown>
 type AnyWritableAtom = WritableAtom<unknown, unknown>
 type OnUnmount = () => void
 type NonPromise<T> = T extends Promise<infer V> ? V : T
-type WriteGetter = Parameters<WritableAtom<unknown, unknown>['write']>[0]
+// type WriteGetter = Parameters<WritableAtom<unknown, unknown>['write']>[0]
 type Setter = Parameters<WritableAtom<unknown, unknown>['write']>[1]
 
 const hasInitialValue = <T extends Atom<unknown>>(
@@ -340,7 +340,7 @@ const readAtomState = <Value>(
     } else if (errorOrPromise instanceof Error) {
       error = errorOrPromise
     } else {
-      error = new Error(errorOrPromise)
+      error = new Error(errorOrPromise as any)
     }
   }
   if (error) {
@@ -407,7 +407,7 @@ const writeAtomState = <Value, Update>(
     })
     return
   }
-  const writeGetter: WriteGetter = (
+  const writeGetter: any = (
     a: AnyAtom,
     unstable_promise: boolean = false
   ) => {
@@ -483,8 +483,8 @@ const writeAtomState = <Value, Update>(
     }) as Setter,
     update
   )
-  if (promiseOrVoid instanceof Promise) {
-    const promise = promiseOrVoid.finally(() => {
+  if ((promiseOrVoid as any) instanceof Promise) {
+    const promise = (promiseOrVoid as any).finally(() => {
       setAtomWritePromise(state, atom)
       flushPending(state)
     })

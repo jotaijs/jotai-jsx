@@ -107,18 +107,18 @@ describe('useAtom spec', () => {
       );
     };
     render(
-      <>
+      <div>
         <Component />
-      </>,
+      </div>,
       document.body,
     );
     expect(document.body.innerHTML).toMatchInlineSnapshot(
-      `"visible<button type=\\"button\\">toggle</button>"`,
+      `"<div>visible<button type=\\"button\\">toggle</button></div>"`,
     );
     await Promise.resolve(); // wait for subscription
     document.getElementsByTagName('button')[0].click();
     expect(document.body.innerHTML).toMatchInlineSnapshot(
-      `"<button type=\\"button\\">toggle</button>"`,
+      `"<div><button type=\\"button\\">toggle</button></div>"`,
     );
   });
 });
