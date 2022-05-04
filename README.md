@@ -14,3 +14,4 @@
 - [Add useConstant](https://twitter.com/dai_shi/status/1421726564752838657)
 - [Primitive hooks](https://twitter.com/dai_shi/status/1421769484675653637)
 - [Framework-agnostic](https://twitter.com/dai_shi/status/1434543349524877317)
+- [Transferred to jotai-labs](https://twitter.com/dai_shi/status/1521664484955365376)
