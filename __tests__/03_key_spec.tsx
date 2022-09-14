@@ -54,12 +54,12 @@ describe('key spec', () => {
       `"<div><p style=\\"color: red\\">hello</p><p>jotai</p><button type=\\"button\\">button</button></div>"`,
     );
     await Promise.resolve(); // wait for subscription
-    document.getElementsByTagName('button')[0].click();
+    document.getElementsByTagName('button')[0]?.click();
     expect(document.body.innerHTML).toMatchInlineSnapshot(
       `"<div><p>jotai</p><p>hello</p><button type=\\"button\\">button</button></div>"`,
     );
     await Promise.resolve(); // wait for subscription
-    document.getElementsByTagName('button')[0].click();
+    document.getElementsByTagName('button')[0]?.click();
     expect(document.body.innerHTML).toMatchInlineSnapshot(
       `"<div><p>hello</p><button type=\\"button\\">button</button></div>"`,
     );
@@ -106,12 +106,12 @@ describe('key spec', () => {
       `"<div><p style=\\"color: red\\">hello</p><p>jotai</p><button type=\\"button\\">button</button>end</div>"`,
     );
     await Promise.resolve(); // wait for subscription
-    document.getElementsByTagName('button')[0].click();
+    document.getElementsByTagName('button')[0]?.click();
     expect(document.body.innerHTML).toMatchInlineSnapshot(
       `"<div><p>jotai</p><p style=\\"color: red\\">hello</p><button type=\\"button\\">button</button>end</div>"`,
     );
     await Promise.resolve(); // wait for subscription
-    document.getElementsByTagName('button')[0].click();
+    document.getElementsByTagName('button')[0]?.click();
     expect(document.body.innerHTML).toMatchInlineSnapshot(
       `"<div><p style=\\"color: red\\">hello</p><button type=\\"button\\">button</button>end</div>"`,
     );
@@ -157,12 +157,12 @@ describe('key spec', () => {
       `"<div><p style=\\"color: red\\">hello</p><p>jotai</p><button type=\\"button\\">button</button></div>"`,
     );
     await Promise.resolve(); // wait for subscription
-    document.getElementsByTagName('button')[0].click();
+    document.getElementsByTagName('button')[0]?.click();
     expect(document.body.innerHTML).toMatchInlineSnapshot(
       `"<div><p>jotai</p><p style=\\"color: red\\">hello</p><button type=\\"button\\">button</button></div>"`,
     );
     await Promise.resolve(); // wait for subscription
-    document.getElementsByTagName('button')[0].click();
+    document.getElementsByTagName('button')[0]?.click();
     expect(document.body.innerHTML).toMatchInlineSnapshot(
       `"<div><p style=\\"color: red\\">hello</p><button type=\\"button\\">button</button></div>"`,
     );

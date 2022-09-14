@@ -11,7 +11,11 @@ const areEqualDeps = (a: unknown[], b: unknown[]): boolean => {
 
 export function useEffect(fn: () => (() => void) | void, deps?: unknown[]) {
   const ref = useConstant(
-    () => ({} as { effectAtom?: WritableAtom<null, null>; deps?: unknown[] }),
+    () =>
+      ({} as {
+        effectAtom?: WritableAtom<null, null>;
+        deps?: unknown[] | undefined;
+      }),
   );
   if (!deps || !ref.deps || !areEqualDeps(deps, ref.deps)) {
     delete ref.effectAtom;

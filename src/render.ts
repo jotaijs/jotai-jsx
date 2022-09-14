@@ -28,7 +28,7 @@ type RenderContext = {
   selectionStart: number | null; // for text(area) input only
   hooks: HookContext[];
   hookIndex: number;
-  force?: boolean;
+  force?: boolean | undefined;
   memoProps?: unknown;
   memoResult?: unknown;
 };

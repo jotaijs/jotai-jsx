@@ -50,7 +50,7 @@ export function useAtom<Value, Update>(
   }
   const value = atomState.v;
 
-  const ctx = renderStack[0];
+  const ctx = renderStack[0] as typeof renderStack[number];
   const { hookIndex } = ctx;
   const hookCtx: typeof renderStack[number]['hooks'][number] | undefined =
     ctx.hooks[hookIndex];

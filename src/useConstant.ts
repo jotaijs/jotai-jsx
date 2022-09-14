@@ -1,7 +1,7 @@
 import { renderStack } from './render';
 
 export function useConstant<Value>(create: () => Value): Value {
-  const ctx = renderStack[0];
+  const ctx = renderStack[0] as typeof renderStack[number];
   const { hookIndex } = ctx;
   const hookCtx: typeof renderStack[number]['hooks'][number] | undefined =
     ctx.hooks[hookIndex];

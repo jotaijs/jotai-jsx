@@ -15,7 +15,7 @@ export function memo<Props, Result>(
   areEqual: (a: Props, b: Props) => boolean = defaultAreEqual,
 ) {
   return (props: Props) => {
-    const ctx = renderStack[0];
+    const ctx = renderStack[0] as typeof renderStack[number];
     if (
       !ctx.force &&
       ctx.memoProps &&
