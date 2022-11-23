@@ -47,12 +47,12 @@ describe('useAtom spec', () => {
       document.body,
     );
     expect(document.body.innerHTML).toMatchInlineSnapshot(
-      `"<div>body<p>1</p><button type=\\"button\\">button</button></div>"`,
+      `"<div>body<p>1</p><button type="button">button</button></div>"`,
     );
     await Promise.resolve(); // wait for subscription
     document.getElementsByTagName('button')[0]?.click();
     expect(document.body.innerHTML).toMatchInlineSnapshot(
-      `"<div>body<p>2</p><button type=\\"button\\">button</button></div>"`,
+      `"<div>body<p>2</p><button type="button">button</button></div>"`,
     );
   });
 
@@ -79,12 +79,12 @@ describe('useAtom spec', () => {
       document.body,
     );
     expect(document.body.innerHTML).toMatchInlineSnapshot(
-      `"<div>body<p>1</p><button type=\\"button\\">button</button>another<p>1</p><button type=\\"button\\">button</button></div>"`,
+      `"<div>body<p>1</p><button type="button">button</button>another<p>1</p><button type="button">button</button></div>"`,
     );
     await Promise.resolve(); // wait for subscription
     document.getElementsByTagName('button')[1]?.click();
     expect(document.body.innerHTML).toMatchInlineSnapshot(
-      `"<div>body<p>2</p><button type=\\"button\\">button</button>another<p>2</p><button type=\\"button\\">button</button></div>"`,
+      `"<div>body<p>2</p><button type="button">button</button>another<p>2</p><button type="button">button</button></div>"`,
     );
   });
 
@@ -113,12 +113,12 @@ describe('useAtom spec', () => {
       document.body,
     );
     expect(document.body.innerHTML).toMatchInlineSnapshot(
-      `"<div>visible<button type=\\"button\\">toggle</button></div>"`,
+      `"<div>visible<button type="button">toggle</button></div>"`,
     );
     await Promise.resolve(); // wait for subscription
     document.getElementsByTagName('button')[0]?.click();
     expect(document.body.innerHTML).toMatchInlineSnapshot(
-      `"<div><button type=\\"button\\">toggle</button></div>"`,
+      `"<div><button type="button">toggle</button></div>"`,
     );
   });
 });
