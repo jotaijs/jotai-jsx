@@ -2,7 +2,7 @@
 /* eslint jsx-a11y/no-static-element-interactions: off */
 /* eslint jsx-a11y/click-events-have-key-events: off */
 
-import { atom } from 'jotai';
+import { atom } from 'jotai/vanilla';
 import { memo, useAtom } from 'jotai-jsx';
 
 // prettier-ignore

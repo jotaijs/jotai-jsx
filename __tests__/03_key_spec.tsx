@@ -1,7 +1,7 @@
 /* eslint quotes: off */
 /* eslint no-console: off */
 
-import { atom } from 'jotai';
+import { atom } from 'jotai/vanilla';
 import { render, memo, useAtom } from '../src/index';
 
 describe('key spec', () => {

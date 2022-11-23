@@ -1,5 +1,5 @@
-import { atom } from 'jotai';
-import type { WritableAtom } from 'jotai';
+import { atom } from 'jotai/vanilla';
+import type { PrimitiveAtom } from 'jotai/vanilla';
 import { useAtom, useConstant } from '../index';
 
 const areEqualDeps = (a: unknown[], b: unknown[]): boolean => {
@@ -13,7 +13,7 @@ export function useEffect(fn: () => (() => void) | void, deps?: unknown[]) {
   const ref = useConstant(
     () =>
       ({} as {
-        effectAtom?: WritableAtom<null, null>;
+        effectAtom?: PrimitiveAtom<null>;
         deps?: unknown[] | undefined;
       }),
   );
@@ -25,5 +25,5 @@ export function useEffect(fn: () => (() => void) | void, deps?: unknown[]) {
     ref.effectAtom = atom(null);
     ref.effectAtom.onMount = fn;
   }
-  useAtom(ref.effectAtom as WritableAtom<null, null>);
+  useAtom(ref.effectAtom as PrimitiveAtom<null>);
 }

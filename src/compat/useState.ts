@@ -1,4 +1,4 @@
-import { atom } from 'jotai';
+import { atom } from 'jotai/vanilla';
 import { useAtom, useConstant } from '../index';
 
 export function useState<Value>(initialValue: Value | (() => Value)) {
