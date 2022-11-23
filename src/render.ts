@@ -237,7 +237,20 @@ export function render(
   childrenToUnmount.forEach((childCtx) => {
     unmount(childCtx);
   });
-  unmount(ctx, true);
+  if (
+    ele !== null &&
+    ele !== undefined &&
+    ele !== false &&
+    ele !== true &&
+    !Array.isArray(ele) &&
+    typeof ele !== 'string' &&
+    typeof ele !== 'number' &&
+    typeof ele.type === 'function'
+  ) {
+    // we should not unmount function element to keep hooks array
+  } else {
+    unmount(ctx, true);
+  }
   removeAllNodes(parent, ctx);
 
   if (ele === null || ele === undefined || ele === false || ele === true) {
