@@ -1,4 +1,4 @@
-import { atom } from 'jotai';
+import { atom } from 'jotai/vanilla';
 
 export type VisibilityFilterType =
   | 'SHOW_ALL'

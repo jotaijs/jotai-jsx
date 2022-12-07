@@ -1,37 +1,21 @@
-import type { Atom, WritableAtom } from 'jotai';
-import {
-  createStore,
-  READ_ATOM,
-  WRITE_ATOM,
-  COMMIT_ATOM,
-  SUBSCRIBE_ATOM,
-} from './vendor/store';
+import { createStore } from 'jotai/vanilla';
+import type { Atom, WritableAtom } from 'jotai/vanilla';
 
 import { renderStack } from './render';
 
-export type SetAtom<Update> = undefined extends Update
-  ? (update?: Update) => void
-  : (update: Update) => void;
+export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
 // TODO context
 const globalStore = createStore();
 
-const isWritable = <Value, Update>(
-  atom: Atom<Value> | WritableAtom<Value, Update>,
-): atom is WritableAtom<Value, Update> =>
-  !!(atom as WritableAtom<Value, Update>).write;
+const isWritable = <Value, Args extends unknown[], Result>(
+  atom: Atom<Value> | WritableAtom<Value, Args, Result>,
+): atom is WritableAtom<Value, Args, Result> =>
+  !!(atom as WritableAtom<Value, Args, Result>).write;
 
-export function useAtom<Value, Update>(
-  atom: WritableAtom<Value | Promise<Value>, Update>,
-): [Value, SetAtom<Update>];
-
-export function useAtom<Value, Update>(
-  atom: WritableAtom<Promise<Value>, Update>,
-): [Value, SetAtom<Update>];
-
-export function useAtom<Value, Update>(
-  atom: WritableAtom<Value, Update>,
-): [Value, SetAtom<Update>];
+export function useAtom<Value, Args extends unknown[], Result>(
+  atom: WritableAtom<Value, Args, Result>,
+): [Value, SetAtom<Args, Result>];
 
 export function useAtom<Value>(
   atom: Atom<Value | Promise<Value>>,
@@ -41,14 +25,10 @@ export function useAtom<Value>(atom: Atom<Promise<Value>>): [Value, never];
 
 export function useAtom<Value>(atom: Atom<Value>): [Value, never];
 
-export function useAtom<Value, Update>(
-  atom: Atom<Value> | WritableAtom<Value, Update>,
+export function useAtom<Value, Args extends unknown[], Result>(
+  atom: Atom<Value> | WritableAtom<Value, Args, Result>,
 ) {
-  const atomState = globalStore[READ_ATOM](atom);
-  if (!('v' in atomState)) {
-    throw new Error('TODO handle error and promise');
-  }
-  const value = atomState.v;
+  const value = globalStore.get(atom);
 
   const ctx = renderStack[0] as typeof renderStack[number];
   const { hookIndex } = ctx;
@@ -56,9 +36,9 @@ export function useAtom<Value, Update>(
     ctx.hooks[hookIndex];
   ++ctx.hookIndex;
 
-  let setAtom = (update?: Update) => {
+  let setAtom = (...args: Args) => {
     if (isWritable(atom)) {
-      globalStore[WRITE_ATOM](atom, update as Update);
+      globalStore.set(atom, ...args);
     } else {
       throw new Error('not writable atom');
     }
@@ -79,21 +59,17 @@ export function useAtom<Value, Update>(
       hookCtx?.cleanup?.();
       let prevValue = value;
       ctx.hooks[hookIndex] = {
-        cleanup: globalStore[SUBSCRIBE_ATOM](atom, () => {
-          const nextAtomState = globalStore[READ_ATOM](atom);
-          if (!('v' in nextAtomState)) {
-            throw new Error('TODO handle error and promise');
-          }
-          if (!Object.is(nextAtomState.v, prevValue)) {
-            prevValue = nextAtomState.v;
+        cleanup: globalStore.sub(atom, () => {
+          const nextValue = globalStore.get(atom);
+          if (!Object.is(nextValue, prevValue)) {
+            prevValue = nextValue;
             ctx.rerender?.(true);
           }
         }),
         atom,
-        setAtom: setAtom as SetAtom<unknown>,
+        setAtom: setAtom as SetAtom<unknown[], unknown>,
       };
     }
-    globalStore[COMMIT_ATOM](atom);
   });
 
   return [value, setAtom];

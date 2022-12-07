@@ -1,6 +1,6 @@
 /* eslint quotes: off */
 
-import { atom } from 'jotai';
+import { atom } from 'jotai/vanilla';
 import { render, useAtom } from '../src/index';
 
 describe('useAtom spec', () => {

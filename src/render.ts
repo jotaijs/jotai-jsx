@@ -1,4 +1,4 @@
-import type { Atom } from 'jotai';
+import type { Atom } from 'jotai/vanilla';
 import type { SetAtom } from './useAtom';
 
 type UnknownElement =
@@ -13,7 +13,7 @@ type UnknownElement =
 type HookContext = {
   cleanup?: () => void;
   atom?: Atom<unknown>;
-  setAtom?: SetAtom<unknown>;
+  setAtom?: SetAtom<unknown[], unknown>;
   constant?: unknown;
 };
 
